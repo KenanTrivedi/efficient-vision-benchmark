@@ -1,0 +1,86 @@
+# ═══════════════════════════════════════════════════════════════
+# Model Registry — Efficient Vision Model Benchmark
+# ═══════════════════════════════════════════════════════════════
+# Curated selection spanning classical, mobile-optimized, and
+# modernized CNN architectures (2016–2024).
+#
+# All weights loaded from torchvision.models (ImageNet-1K pretrained).
+# Classifier heads are adapted at runtime for the target dataset.
+
+# ── Classical Baselines ──────────────────────────────────────
+
+resnet50:
+  name: "ResNet-50"
+  torchvision_name: "resnet50"
+  weights: "IMAGENET1K_V2"
+  input_size: 224
+  year: 2016
+  paper: "He et al., Deep Residual Learning for Image Recognition, CVPR 2016"
+  description: "Standard residual network — widely used accuracy baseline"
+
+# ── Mobile / Lightweight ─────────────────────────────────────
+
+mobilenet_v3_large:
+  name: "MobileNetV3-Large"
+  torchvision_name: "mobilenet_v3_large"
+  weights: "IMAGENET1K_V2"
+  input_size: 224
+  year: 2019
+  paper: "Howard et al., Searching for MobileNetV3, ICCV 2019"
+  description: "NAS-designed with squeeze-excite — mobile deployment standard"
+
+efficientnet_b0:
+  name: "EfficientNet-B0"
+  torchvision_name: "efficientnet_b0"
+  weights: "IMAGENET1K_V1"
+  input_size: 224
+  year: 2019
+  paper: "Tan & Le, EfficientNet: Rethinking Model Scaling, ICML 2019"
+  description: "Compound-scaled architecture — best accuracy/FLOPs ratio in its class"
+
+efficientnet_v2_s:
+  name: "EfficientNetV2-S"
+  torchvision_name: "efficientnet_v2_s"
+  weights: "IMAGENET1K_V1"
+  input_size: 384
+  year: 2021
+  paper: "Tan & Le, EfficientNetV2: Smaller Models and Faster Training, ICML 2021"
+  description: "Progressive learning + Fused-MBConv — faster training, higher accuracy"
+
+# ── Modern Architectures ─────────────────────────────────────
+
+convnext_tiny:
+  name: "ConvNeXt-Tiny"
+  torchvision_name: "convnext_tiny"
+  weights: "IMAGENET1K_V1"
+  input_size: 224
+  year: 2022
+  paper: "Liu et al., A ConvNet for the 2020s, CVPR 2022"
+  description: "Modernized pure-CNN design competitive with Vision Transformers"
+
+regnet_y_400mf:
+  name: "RegNetY-400MF"
+  torchvision_name: "regnet_y_400mf"
+  weights: "IMAGENET1K_V2"
+  input_size: 224
+  year: 2020
+  paper: "Radosavovic et al., Designing Network Design Spaces, CVPR 2020"
+  description: "Parametric network design — highly regular and hardware-efficient"
+
+swin_t:
+  name: "Swin-Tiny"
+  torchvision_name: "swin_t"
+  weights: "IMAGENET1K_V1"
+  input_size: 224
+  year: 2021
+  paper: "Liu et al., Swin Transformer: Hierarchical Vision Transformer, ICCV 2021"
+  description: "Shifted-window transformer — bridges CNN efficiency with ViT accuracy"
+
+maxvit_t:
+  name: "MaxViT-Tiny"
+  torchvision_name: "maxvit_t"
+  weights: "IMAGENET1K_V1"
+  input_size: 224
+  year: 2022
+  paper: "Tu et al., MaxViT: Multi-Axis Vision Transformer, ECCV 2022"
+  description: "Multi-axis attention — efficient global-local feature mixing"

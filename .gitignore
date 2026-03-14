@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Data
+data/
+*.tar.gz
+*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results (keep structure, ignore generated files)
+results/benchmark_results.json
+results/figures/*.png
