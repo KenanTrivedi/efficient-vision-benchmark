@@ -41,7 +41,7 @@ def evaluate_accuracy(
     correct = {k: 0 for k in topk}
     total = 0
 
-    for images, labels in tqdm(dataloader, desc="Evaluating", leave=False):
+    for images, labels in dataloader:
         images = images.to(device)
         labels = labels.to(device)
         outputs = model(images)
