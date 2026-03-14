@@ -20,6 +20,7 @@ env/
 *.swp
 *.swo
 *~
+.playwright-cli/
 
 # Data
 data/
@@ -32,3 +33,7 @@ Thumbs.db
 
 # Results — keep generated outputs for GitHub showcase
 # (Remove these lines if you want to exclude results from version control)
+results/finetune/**/*.pt
+results/finetune/**/*.pth
+results/finetune/**/*.onnx
+results/splits/
