@@ -1,0 +1,382 @@
+{
+  "timestamp": "2026-03-14T19:07:32.426855",
+  "device": "cuda",
+  "models": {
+    "efficientvit_m0": {
+      "model_key": "efficientvit_m0",
+      "model_info": {
+        "total_params": 2158366,
+        "trainable_params": 2158366,
+        "size_mb": 8.23,
+        "size_kb": 8431.1,
+        "param_str": "2.2M"
+      },
+      "flops": {
+        "macs": 79292106,
+        "flops": 158584212,
+        "macs_str": "79.29M",
+        "flops_str": "158.58M"
+      },
+      "latency_cpu": {
+        "mean_ms": 77.62,
+        "std_ms": 17.58,
+        "median_ms": 73.27,
+        "min_ms": 55.02,
+        "max_ms": 114.97,
+        "p95_ms": 107.19,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 40.6,
+        "std_ms": 3.31,
+        "median_ms": 40.45,
+        "min_ms": 35.56,
+        "max_ms": 49.02,
+        "p95_ms": 46.68,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 25.4,
+        "16": 380.5
+      },
+      "accuracy": {
+        "top1_accuracy": 8.86,
+        "top5_accuracy": 56.95,
+        "total_samples": 23008
+      }
+    },
+    "fastvit_mci4": {
+      "model_key": "fastvit_mci4",
+      "model_info": {
+        "total_params": 318679306,
+        "trainable_params": 318679306,
+        "size_mb": 1215.67,
+        "size_kb": 1244841.0,
+        "param_str": "318.7M"
+      },
+      "flops": {
+        "macs": 22112062218,
+        "flops": 44224124436,
+        "macs_str": "22.11G",
+        "flops_str": "44.22G"
+      },
+      "latency_cpu": {
+        "mean_ms": 895.01,
+        "std_ms": 113.64,
+        "median_ms": 898.06,
+        "min_ms": 719.3,
+        "max_ms": 1117.44,
+        "p95_ms": 1088.11,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 79.41,
+        "std_ms": 4.79,
+        "median_ms": 80.4,
+        "min_ms": 70.54,
+        "max_ms": 86.24,
+        "p95_ms": 85.4,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 12.2,
+        "16": 76.1
+      },
+      "accuracy": {
+        "top1_accuracy": 3.36,
+        "top5_accuracy": 42.03,
+        "total_samples": 23008
+      }
+    },
+    "mobilevitv2_050": {
+      "model_key": "mobilevitv2_050",
+      "model_info": {
+        "total_params": 1116163,
+        "trainable_params": 1116163,
+        "size_mb": 4.26,
+        "size_kb": 4360.0,
+        "param_str": "1.1M"
+      },
+      "flops": {
+        "macs": 471638922,
+        "flops": 943277844,
+        "macs_str": "471.64M",
+        "flops_str": "943.28M"
+      },
+      "latency_cpu": {
+        "mean_ms": 48.25,
+        "std_ms": 5.08,
+        "median_ms": 46.72,
+        "min_ms": 40.4,
+        "max_ms": 55.65,
+        "p95_ms": 55.37,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 13.77,
+        "std_ms": 3.86,
+        "median_ms": 12.69,
+        "min_ms": 9.26,
+        "max_ms": 23.63,
+        "p95_ms": 23.18,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 74.7,
+        "16": 1054.0
+      },
+      "accuracy": {
+        "top1_accuracy": 11.73,
+        "top5_accuracy": 51.59,
+        "total_samples": 23008
+      }
+    },
+    "mobilenetv4_conv_small": {
+      "model_key": "mobilenetv4_conv_small",
+      "model_info": {
+        "total_params": 2505834,
+        "trainable_params": 2505834,
+        "size_mb": 9.56,
+        "size_kb": 9788.4,
+        "param_str": "2.5M"
+      },
+      "flops": {
+        "macs": 188259264,
+        "flops": 376518528,
+        "macs_str": "188.26M",
+        "flops_str": "376.52M"
+      },
+      "latency_cpu": {
+        "mean_ms": 33.55,
+        "std_ms": 2.85,
+        "median_ms": 32.46,
+        "min_ms": 28.97,
+        "max_ms": 38.39,
+        "p95_ms": 37.67,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 7.74,
+        "std_ms": 2.15,
+        "median_ms": 7.0,
+        "min_ms": 6.13,
+        "max_ms": 16.68,
+        "p95_ms": 11.32,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 108.7,
+        "16": 2226.7
+      },
+      "accuracy": {
+        "top1_accuracy": 6.89,
+        "top5_accuracy": 48.2,
+        "total_samples": 23008
+      }
+    },
+    "resnet50": {
+      "model_key": "resnet50",
+      "model_info": {
+        "total_params": 23528522,
+        "trainable_params": 23528522,
+        "size_mb": 89.75,
+        "size_kb": 91908.3,
+        "param_str": "23.5M"
+      },
+      "flops": {
+        "macs": 4130408458,
+        "flops": 8260816916,
+        "macs_str": "4.13G",
+        "flops_str": "8.26G"
+      },
+      "latency_cpu": {
+        "mean_ms": 84.22,
+        "std_ms": 7.5,
+        "median_ms": 85.38,
+        "min_ms": 73.44,
+        "max_ms": 101.85,
+        "p95_ms": 93.68,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 16.65,
+        "std_ms": 2.69,
+        "median_ms": 17.2,
+        "min_ms": 9.38,
+        "max_ms": 20.43,
+        "p95_ms": 19.97,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 78.9,
+        "16": 438.7
+      },
+      "accuracy": {
+        "top1_accuracy": 12.98,
+        "top5_accuracy": 52.75,
+        "total_samples": 23008
+      }
+    },
+    "mobilenet_v3_large": {
+      "model_key": "mobilenet_v3_large",
+      "model_info": {
+        "total_params": 4214842,
+        "trainable_params": 4214842,
+        "size_mb": 16.08,
+        "size_kb": 16464.2,
+        "param_str": "4.2M"
+      },
+      "flops": {
+        "macs": 230048226,
+        "flops": 460096452,
+        "macs_str": "230.05M",
+        "flops_str": "460.10M"
+      },
+      "latency_cpu": {
+        "mean_ms": 32.76,
+        "std_ms": 3.61,
+        "median_ms": 31.32,
+        "min_ms": 30.42,
+        "max_ms": 46.09,
+        "p95_ms": 38.89,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 7.81,
+        "std_ms": 0.72,
+        "median_ms": 7.71,
+        "min_ms": 6.7,
+        "max_ms": 10.67,
+        "p95_ms": 8.83,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 131.7,
+        "16": 1669.5
+      },
+      "accuracy": {
+        "top1_accuracy": 9.94,
+        "top5_accuracy": 49.23,
+        "total_samples": 23008
+      }
+    },
+    "efficientnet_b0": {
+      "model_key": "efficientnet_b0",
+      "model_info": {
+        "total_params": 4020358,
+        "trainable_params": 4020358,
+        "size_mb": 15.34,
+        "size_kb": 15704.5,
+        "param_str": "4.0M"
+      },
+      "flops": {
+        "macs": 408928706,
+        "flops": 817857412,
+        "macs_str": "408.93M",
+        "flops_str": "817.86M"
+      },
+      "latency_cpu": {
+        "mean_ms": 40.62,
+        "std_ms": 3.9,
+        "median_ms": 40.26,
+        "min_ms": 36.95,
+        "max_ms": 55.72,
+        "p95_ms": 44.04,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 9.61,
+        "std_ms": 0.96,
+        "median_ms": 9.2,
+        "min_ms": 8.57,
+        "max_ms": 12.27,
+        "p95_ms": 11.8,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 105.6,
+        "16": 1009.7
+      },
+      "accuracy": {
+        "top1_accuracy": 5.61,
+        "top5_accuracy": 43.43,
+        "total_samples": 23008
+      }
+    },
+    "convnext_tiny": {
+      "model_key": "convnext_tiny",
+      "model_info": {
+        "total_params": 27827818,
+        "trainable_params": 27827818,
+        "size_mb": 106.15,
+        "size_kb": 108702.4,
+        "param_str": "27.8M"
+      },
+      "flops": {
+        "macs": 4487586058,
+        "flops": 8975172116,
+        "macs_str": "4.49G",
+        "flops_str": "8.98G"
+      },
+      "latency_cpu": {
+        "mean_ms": 58.15,
+        "std_ms": 1.7,
+        "median_ms": 58.32,
+        "min_ms": 54.22,
+        "max_ms": 61.55,
+        "p95_ms": 60.45,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 7.46,
+        "std_ms": 2.49,
+        "median_ms": 6.33,
+        "min_ms": 4.88,
+        "max_ms": 12.82,
+        "p95_ms": 11.64,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 162.5,
+        "16": 304.2
+      },
+      "accuracy": {
+        "top1_accuracy": 12.28,
+        "top5_accuracy": 50.03,
+        "total_samples": 23008
+      }
+    }
+  }
+}

@@ -117,6 +117,33 @@ Generates publication-ready charts in `results/figures/`:
 
 ---
 
+## Results (EuroSAT · Zero-Shot Transfer)
+
+These are **zero-shot** results: ImageNet-pretrained weights with a replaced classification head, **no fine-tuning**. This deliberately measures how well each architecture's learned representations generalise to aerial textures — a non-trivial domain shift.
+
+| Architecture | Top-1 (%) | CPU Latency (ms) | Params |
+|---|---:|---:|---|
+| ResNet-50 | 12.98 | 85.38 | 23.5M |
+| ConvNeXt-Tiny | 12.28 | 58.32 | 27.8M |
+| MobileViTv2-0.5 | 11.73 | 46.72 | 1.1M |
+| MobileNetV3-L | 9.94 | 31.32 | 4.2M |
+| EfficientViT-M0 | 8.86 | 73.27 | 2.2M |
+| MobileNetV4-S | 6.89 | 32.46 | 2.5M |
+| EfficientNet-B0 | 5.61 | 40.26 | 4.0M |
+| FastViT-MCI4 | 3.36 | 898.06 | 318.7M |
+
+> **Key insight:** MobileViTv2-0.5 achieves the best accuracy-to-size ratio (11.73% with only 1.1M params), while MobileNetV3-L offers the lowest latency (31ms). The large domain gap confirms that aerial imagery requires targeted fine-tuning — a natural next step for this project.
+
+### Accuracy vs. Latency Trade-off
+
+![Accuracy vs Latency](results/figures/accuracy_vs_latency.png)
+
+### Model Size Comparison
+
+![Model Size Comparison](results/figures/model_size_comparison.png)
+
+---
+
 ## Project Structure
 
 ```

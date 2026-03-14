@@ -30,6 +30,5 @@ data/
 .DS_Store
 Thumbs.db
 
-# Results (keep structure, ignore generated files)
-results/benchmark_results.json
-results/figures/*.png
+# Results — keep generated outputs for GitHub showcase
+# (Remove these lines if you want to exclude results from version control)
