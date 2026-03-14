@@ -7,10 +7,9 @@ from __future__ import annotations
 import json
 import random
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 import torch
-from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 import torchvision
 import torchvision.transforms as T
@@ -23,6 +22,18 @@ DEFAULT_TRAIN_RATIO = 0.70
 DEFAULT_VAL_RATIO = 0.15
 DEFAULT_SEED = 42
 DEFAULT_SPLIT_FILE = Path("results/splits/eurosat_split_seed42.json")
+EXPECTED_EUROSAT_CLASSES = [
+    "AnnualCrop",
+    "Forest",
+    "HerbaceousVegetation",
+    "Highway",
+    "Industrial",
+    "Pasture",
+    "PermanentCrop",
+    "Residential",
+    "River",
+    "SeaLake",
+]
 
 
 class TransformedSubset(Dataset):
@@ -48,13 +59,14 @@ def get_transforms(input_size: int = 224) -> Tuple[T.Compose, T.Compose]:
     resize_size = max(int(input_size * 1.14), input_size + 16)
 
     train_transform = T.Compose([
-        T.RandomResizedCrop(input_size, scale=(0.75, 1.0)),
+        T.RandomResizedCrop(input_size, scale=(0.72, 1.0)),
         T.RandomHorizontalFlip(p=0.5),
         T.RandomVerticalFlip(p=0.5),
         T.RandomRotation(degrees=180),
         T.ColorJitter(brightness=0.12, contrast=0.12, saturation=0.08, hue=0.02),
         T.ToTensor(),
         T.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        T.RandomErasing(p=0.1, scale=(0.02, 0.12), ratio=(0.3, 3.3), value="random"),
     ])
 
     eval_transform = T.Compose([
@@ -67,11 +79,55 @@ def get_transforms(input_size: int = 224) -> Tuple[T.Compose, T.Compose]:
     return train_transform, eval_transform
 
 
+def inspect_local_eurosat_root(data_dir: str = "./data") -> Dict[str, object]:
+    """Inspect the local EuroSAT folder before loading it with torchvision."""
+    data_root = Path(data_dir) / "eurosat" / "2750"
+    if not data_root.exists():
+        return {
+            "exists": False,
+            "root": str(data_root.as_posix()),
+            "class_names": [],
+            "missing_classes": EXPECTED_EUROSAT_CLASSES,
+            "unexpected_classes": [],
+        }
+
+    class_names = sorted(path.name for path in data_root.iterdir() if path.is_dir())
+    expected = set(EXPECTED_EUROSAT_CLASSES)
+    actual = set(class_names)
+    return {
+        "exists": True,
+        "root": str(data_root.as_posix()),
+        "class_names": class_names,
+        "missing_classes": sorted(expected - actual),
+        "unexpected_classes": sorted(actual - expected),
+    }
+
+
 def _load_base_dataset(data_dir: str = "./data"):
-    return torchvision.datasets.EuroSAT(
+    dataset = torchvision.datasets.EuroSAT(
         root=data_dir,
         download=True,
         transform=None,
+    )
+    _validate_dataset_integrity(dataset, data_dir=data_dir)
+    return dataset
+
+
+def _validate_dataset_integrity(dataset, data_dir: str) -> None:
+    class_names = list(getattr(dataset, "classes", []))
+    if class_names == EXPECTED_EUROSAT_CLASSES:
+        return
+
+    expected = set(EXPECTED_EUROSAT_CLASSES)
+    actual = set(class_names)
+    missing = sorted(expected - actual)
+    unexpected = sorted(actual - expected)
+    inspection = inspect_local_eurosat_root(data_dir=data_dir)
+    raise RuntimeError(
+        "The local EuroSAT cache is not the canonical 10-class RGB dataset. "
+        f"Found classes={class_names}. Missing={missing or 'none'}. Unexpected={unexpected or 'none'}. "
+        f"Inspected folder: {inspection['root']}. Replace the cached data with a clean torchvision download "
+        "before running benchmarks or fine-tuning."
     )
 
 
@@ -83,6 +139,13 @@ def _extract_targets(dataset) -> List[int]:
         return [int(label) for _, label in dataset.samples]
 
     return [int(dataset[idx][1]) for idx in range(len(dataset))]
+
+
+def _summarize_class_counts(class_names: Sequence[str], targets: Sequence[int]) -> Dict[str, int]:
+    class_counts = {class_name: 0 for class_name in class_names}
+    for label in targets:
+        class_counts[class_names[int(label)]] += 1
+    return class_counts
 
 
 def _build_stratified_split_indices(
@@ -105,7 +168,7 @@ def _build_stratified_split_indices(
     rng = random.Random(seed)
     split_indices = {"train": [], "val": [], "test": []}
 
-    for label, label_indices in grouped_indices.items():
+    for label_indices in grouped_indices.values():
         label_indices = list(label_indices)
         rng.shuffle(label_indices)
 
@@ -139,6 +202,46 @@ def _build_stratified_split_indices(
     return split_indices
 
 
+def _split_payload_matches_dataset(
+    payload: Dict[str, object],
+    *,
+    class_names: Sequence[str],
+    class_counts: Dict[str, int],
+    total_samples: int,
+    train_ratio: float,
+    val_ratio: float,
+    seed: int,
+) -> bool:
+    required_keys = {"seed", "train_ratio", "val_ratio", "class_names", "class_counts", "indices"}
+    if not required_keys.issubset(payload.keys()):
+        return False
+
+    if int(payload.get("seed", -1)) != int(seed):
+        return False
+    if float(payload.get("train_ratio", -1.0)) != float(train_ratio):
+        return False
+    if float(payload.get("val_ratio", -1.0)) != float(val_ratio):
+        return False
+    if list(payload.get("class_names", [])) != list(class_names):
+        return False
+    if payload.get("class_counts", {}) != class_counts:
+        return False
+    if int(payload.get("total_samples", -1)) != int(total_samples):
+        return False
+
+    indices = payload.get("indices", {})
+    split_keys = {"train", "val", "test"}
+    if set(indices.keys()) != split_keys:
+        return False
+
+    observed_indices = []
+    for split_name in ("train", "val", "test"):
+        split_indices = list(indices.get(split_name, []))
+        observed_indices.extend(split_indices)
+
+    return len(observed_indices) == total_samples and sorted(observed_indices) == list(range(total_samples))
+
+
 def get_or_create_eurosat_splits(
     data_dir: str = "./data",
     train_ratio: float = DEFAULT_TRAIN_RATIO,
@@ -150,6 +253,9 @@ def get_or_create_eurosat_splits(
     """Create or load deterministic stratified EuroSAT split indices."""
     base_dataset = _load_base_dataset(data_dir=data_dir)
     targets = _extract_targets(base_dataset)
+    class_names = list(getattr(base_dataset, "classes", []))
+    class_counts = _summarize_class_counts(class_names, targets)
+    total_samples = len(targets)
 
     if split_file is None:
         split_file = DEFAULT_SPLIT_FILE if seed == DEFAULT_SEED else Path(
@@ -160,21 +266,28 @@ def get_or_create_eurosat_splits(
     if split_file.exists() and not force_recreate:
         with open(split_file, "r", encoding="utf-8") as handle:
             payload = json.load(handle)
-        return payload
+        if _split_payload_matches_dataset(
+            payload,
+            class_names=class_names,
+            class_counts=class_counts,
+            total_samples=total_samples,
+            train_ratio=train_ratio,
+            val_ratio=val_ratio,
+            seed=seed,
+        ):
+            return payload
 
     split_indices = _build_stratified_split_indices(targets, train_ratio, val_ratio, seed)
     split_counts = {name: len(indices) for name, indices in split_indices.items()}
-    class_counts = {}
-    for class_index, class_name in enumerate(getattr(base_dataset, "classes", [])):
-        class_counts[class_name] = sum(1 for label in targets if label == class_index)
 
     payload = {
         "seed": seed,
         "train_ratio": train_ratio,
         "val_ratio": val_ratio,
         "test_ratio": round(1.0 - train_ratio - val_ratio, 2),
+        "total_samples": total_samples,
         "counts": split_counts,
-        "class_names": list(getattr(base_dataset, "classes", [])),
+        "class_names": class_names,
         "class_counts": class_counts,
         "indices": split_indices,
     }

@@ -1,15 +1,48 @@
 {
-  "timestamp": "2026-03-14T19:07:32.426855",
-  "device": "cuda",
+  "meta": {
+    "timestamp": "2026-03-14T23:04:21.266696",
+    "device": "cuda",
+    "pytorch_version": "2.9.1+cu128",
+    "cuda_available": true,
+    "gpu_name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "dataset": "EuroSAT",
+    "protocol": "head_reset_transfer_baseline",
+    "protocol_label": "Head-reset transfer baseline",
+    "protocol_description": "Each pretrained backbone is adapted to EuroSAT by replacing the final classifier with a fresh 10-class layer and evaluating before training.",
+    "split_seed": 42,
+    "split_counts": {
+      "train": 18900,
+      "val": 4050,
+      "test": 4050
+    },
+    "class_names": [
+      "AnnualCrop",
+      "Forest",
+      "HerbaceousVegetation",
+      "Highway",
+      "Industrial",
+      "Pasture",
+      "PermanentCrop",
+      "Residential",
+      "River",
+      "SeaLake"
+    ]
+  },
   "models": {
     "efficientvit_m0": {
-      "model_key": "efficientvit_m0",
+      "name": "EfficientViT-M0",
+      "year": 2023,
+      "paper": "Cai et al. (MIT), EfficientViT: Memory Efficient Vision Transformer, ICCV 2023",
+      "source": "timm",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 2158366,
         "trainable_params": 2158366,
         "size_mb": 8.23,
         "size_kb": 8431.1,
-        "param_str": "2.2M"
+        "param_str": "2.2M",
+        "trainable_param_str": "2.2M"
       },
       "flops": {
         "macs": 79292106,
@@ -18,45 +51,51 @@
         "flops_str": "158.58M"
       },
       "latency_cpu": {
-        "mean_ms": 77.62,
-        "std_ms": 17.58,
-        "median_ms": 73.27,
-        "min_ms": 55.02,
-        "max_ms": 114.97,
-        "p95_ms": 107.19,
+        "mean_ms": 31.72,
+        "std_ms": 3.23,
+        "median_ms": 31.88,
+        "min_ms": 25.45,
+        "max_ms": 37.24,
+        "p95_ms": 36.09,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 40.6,
-        "std_ms": 3.31,
-        "median_ms": 40.45,
-        "min_ms": 35.56,
-        "max_ms": 49.02,
-        "p95_ms": 46.68,
+        "mean_ms": 30.01,
+        "std_ms": 6.3,
+        "median_ms": 29.19,
+        "min_ms": 19.45,
+        "max_ms": 45.31,
+        "p95_ms": 42.76,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 25.4,
-        "16": 380.5
+        "1": 41.2,
+        "16": 594.7
       },
       "accuracy": {
-        "top1_accuracy": 8.86,
-        "top5_accuracy": 56.95,
-        "total_samples": 23008
+        "top1_accuracy": 11.09,
+        "top5_accuracy": 47.48,
+        "total_samples": 4050
       }
     },
     "fastvit_mci4": {
-      "model_key": "fastvit_mci4",
+      "name": "FastViT-MCI4",
+      "year": 2025,
+      "paper": "Apple Machine Learning Research, FastViT (MCI Iteration), 2025",
+      "source": "timm",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 318679306,
         "trainable_params": 318679306,
         "size_mb": 1215.67,
         "size_kb": 1244841.0,
-        "param_str": "318.7M"
+        "param_str": "318.7M",
+        "trainable_param_str": "318.7M"
       },
       "flops": {
         "macs": 22112062218,
@@ -65,45 +104,104 @@
         "flops_str": "44.22G"
       },
       "latency_cpu": {
-        "mean_ms": 895.01,
-        "std_ms": 113.64,
-        "median_ms": 898.06,
-        "min_ms": 719.3,
-        "max_ms": 1117.44,
-        "p95_ms": 1088.11,
+        "mean_ms": 373.03,
+        "std_ms": 40.77,
+        "median_ms": 385.84,
+        "min_ms": 314.79,
+        "max_ms": 440.3,
+        "p95_ms": 437.33,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 79.41,
-        "std_ms": 4.79,
-        "median_ms": 80.4,
-        "min_ms": 70.54,
-        "max_ms": 86.24,
-        "p95_ms": 85.4,
+        "mean_ms": 58.13,
+        "std_ms": 7.1,
+        "median_ms": 56.13,
+        "min_ms": 51.58,
+        "max_ms": 85.73,
+        "p95_ms": 71.02,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 12.2,
-        "16": 76.1
+        "1": 16.5,
+        "16": 65.7
       },
       "accuracy": {
-        "top1_accuracy": 3.36,
-        "top5_accuracy": 42.03,
-        "total_samples": 23008
+        "top1_accuracy": 13.41,
+        "top5_accuracy": 55.9,
+        "total_samples": 4050
+      }
+    },
+    "repvit_m0_9": {
+      "name": "RepViT-M0.9",
+      "year": 2024,
+      "paper": "Wang et al. (Tsinghua), RepViT: Revisiting Mobile CNN From ViT Perspective, CVPR 2024",
+      "source": "timm",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
+      "model_info": {
+        "total_params": 4722410,
+        "trainable_params": 4722410,
+        "size_mb": 18.01,
+        "size_kb": 18446.9,
+        "param_str": "4.7M",
+        "trainable_param_str": "4.7M"
+      },
+      "flops": {
+        "macs": 838930594,
+        "flops": 1677861188,
+        "macs_str": "838.93M",
+        "flops_str": "1.68G"
+      },
+      "latency_cpu": {
+        "mean_ms": 52.06,
+        "std_ms": 7.52,
+        "median_ms": 50.31,
+        "min_ms": 44.87,
+        "max_ms": 75.9,
+        "p95_ms": 67.03,
+        "batch_size": 1,
+        "device": "cpu",
+        "num_runs": 20
+      },
+      "latency_gpu": {
+        "mean_ms": 21.0,
+        "std_ms": 3.4,
+        "median_ms": 20.95,
+        "min_ms": 15.14,
+        "max_ms": 27.47,
+        "p95_ms": 27.29,
+        "batch_size": 1,
+        "device": "cuda",
+        "num_runs": 30
+      },
+      "throughput": {
+        "1": 57.2,
+        "16": 777.2
+      },
+      "accuracy": {
+        "top1_accuracy": 12.52,
+        "top5_accuracy": 47.31,
+        "total_samples": 4050
       }
     },
     "mobilevitv2_050": {
-      "model_key": "mobilevitv2_050",
+      "name": "MobileViTv2-0.5",
+      "year": 2022,
+      "paper": "Mehta et al. (Apple), Separable Self-attention for Mobile Vision Transformers, T-PAMI 2022",
+      "source": "timm",
+      "input_size": 256,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 1116163,
         "trainable_params": 1116163,
         "size_mb": 4.26,
         "size_kb": 4360.0,
-        "param_str": "1.1M"
+        "param_str": "1.1M",
+        "trainable_param_str": "1.1M"
       },
       "flops": {
         "macs": 471638922,
@@ -112,45 +210,51 @@
         "flops_str": "943.28M"
       },
       "latency_cpu": {
-        "mean_ms": 48.25,
-        "std_ms": 5.08,
-        "median_ms": 46.72,
-        "min_ms": 40.4,
-        "max_ms": 55.65,
-        "p95_ms": 55.37,
+        "mean_ms": 30.37,
+        "std_ms": 1.65,
+        "median_ms": 30.39,
+        "min_ms": 27.75,
+        "max_ms": 32.95,
+        "p95_ms": 32.57,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 13.77,
-        "std_ms": 3.86,
-        "median_ms": 12.69,
-        "min_ms": 9.26,
-        "max_ms": 23.63,
-        "p95_ms": 23.18,
+        "mean_ms": 15.53,
+        "std_ms": 3.31,
+        "median_ms": 14.98,
+        "min_ms": 9.79,
+        "max_ms": 24.48,
+        "p95_ms": 20.53,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 74.7,
-        "16": 1054.0
+        "1": 81.7,
+        "16": 1020.2
       },
       "accuracy": {
-        "top1_accuracy": 11.73,
-        "top5_accuracy": 51.59,
-        "total_samples": 23008
+        "top1_accuracy": 7.56,
+        "top5_accuracy": 44.74,
+        "total_samples": 4050
       }
     },
     "mobilenetv4_conv_small": {
-      "model_key": "mobilenetv4_conv_small",
+      "name": "MobileNetV4-Small",
+      "year": 2024,
+      "paper": "Qin et al. (Google), MobileNetV4 - Universal Models for the Mobile Ecosystem, CVPR 2024",
+      "source": "timm",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 2505834,
         "trainable_params": 2505834,
         "size_mb": 9.56,
         "size_kb": 9788.4,
-        "param_str": "2.5M"
+        "param_str": "2.5M",
+        "trainable_param_str": "2.5M"
       },
       "flops": {
         "macs": 188259264,
@@ -159,45 +263,51 @@
         "flops_str": "376.52M"
       },
       "latency_cpu": {
-        "mean_ms": 33.55,
-        "std_ms": 2.85,
-        "median_ms": 32.46,
-        "min_ms": 28.97,
-        "max_ms": 38.39,
-        "p95_ms": 37.67,
+        "mean_ms": 16.1,
+        "std_ms": 2.17,
+        "median_ms": 15.62,
+        "min_ms": 13.27,
+        "max_ms": 20.03,
+        "p95_ms": 19.71,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 7.74,
-        "std_ms": 2.15,
-        "median_ms": 7.0,
-        "min_ms": 6.13,
-        "max_ms": 16.68,
-        "p95_ms": 11.32,
+        "mean_ms": 8.75,
+        "std_ms": 2.17,
+        "median_ms": 8.62,
+        "min_ms": 5.85,
+        "max_ms": 14.55,
+        "p95_ms": 12.58,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 108.7,
-        "16": 2226.7
+        "1": 138.7,
+        "16": 2498.3
       },
       "accuracy": {
-        "top1_accuracy": 6.89,
-        "top5_accuracy": 48.2,
-        "total_samples": 23008
+        "top1_accuracy": 8.0,
+        "top5_accuracy": 47.56,
+        "total_samples": 4050
       }
     },
     "resnet50": {
-      "model_key": "resnet50",
+      "name": "ResNet-50",
+      "year": 2016,
+      "paper": "He et al., Deep Residual Learning for Image Recognition, CVPR 2016",
+      "source": "torchvision",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 23528522,
         "trainable_params": 23528522,
         "size_mb": 89.75,
         "size_kb": 91908.3,
-        "param_str": "23.5M"
+        "param_str": "23.5M",
+        "trainable_param_str": "23.5M"
       },
       "flops": {
         "macs": 4130408458,
@@ -206,45 +316,51 @@
         "flops_str": "8.26G"
       },
       "latency_cpu": {
-        "mean_ms": 84.22,
-        "std_ms": 7.5,
-        "median_ms": 85.38,
-        "min_ms": 73.44,
-        "max_ms": 101.85,
-        "p95_ms": 93.68,
+        "mean_ms": 53.65,
+        "std_ms": 2.4,
+        "median_ms": 53.1,
+        "min_ms": 49.57,
+        "max_ms": 59.75,
+        "p95_ms": 56.75,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 16.65,
-        "std_ms": 2.69,
-        "median_ms": 17.2,
-        "min_ms": 9.38,
-        "max_ms": 20.43,
-        "p95_ms": 19.97,
+        "mean_ms": 11.0,
+        "std_ms": 2.94,
+        "median_ms": 10.36,
+        "min_ms": 6.04,
+        "max_ms": 18.82,
+        "p95_ms": 15.47,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 78.9,
-        "16": 438.7
+        "1": 114.6,
+        "16": 423.2
       },
       "accuracy": {
-        "top1_accuracy": 12.98,
-        "top5_accuracy": 52.75,
-        "total_samples": 23008
+        "top1_accuracy": 12.89,
+        "top5_accuracy": 62.07,
+        "total_samples": 4050
       }
     },
     "mobilenet_v3_large": {
-      "model_key": "mobilenet_v3_large",
+      "name": "MobileNetV3-Large",
+      "year": 2019,
+      "paper": "Howard et al., Searching for MobileNetV3, ICCV 2019",
+      "source": "torchvision",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 4214842,
         "trainable_params": 4214842,
         "size_mb": 16.08,
         "size_kb": 16464.2,
-        "param_str": "4.2M"
+        "param_str": "4.2M",
+        "trainable_param_str": "4.2M"
       },
       "flops": {
         "macs": 230048226,
@@ -253,45 +369,51 @@
         "flops_str": "460.10M"
       },
       "latency_cpu": {
-        "mean_ms": 32.76,
-        "std_ms": 3.61,
-        "median_ms": 31.32,
-        "min_ms": 30.42,
-        "max_ms": 46.09,
-        "p95_ms": 38.89,
+        "mean_ms": 20.01,
+        "std_ms": 1.65,
+        "median_ms": 19.87,
+        "min_ms": 17.22,
+        "max_ms": 22.75,
+        "p95_ms": 22.48,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 7.81,
-        "std_ms": 0.72,
-        "median_ms": 7.71,
-        "min_ms": 6.7,
-        "max_ms": 10.67,
-        "p95_ms": 8.83,
+        "mean_ms": 9.95,
+        "std_ms": 2.07,
+        "median_ms": 9.62,
+        "min_ms": 6.97,
+        "max_ms": 16.31,
+        "p95_ms": 13.74,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 131.7,
-        "16": 1669.5
+        "1": 97.7,
+        "16": 1496.0
       },
       "accuracy": {
-        "top1_accuracy": 9.94,
-        "top5_accuracy": 49.23,
-        "total_samples": 23008
+        "top1_accuracy": 10.07,
+        "top5_accuracy": 55.7,
+        "total_samples": 4050
       }
     },
     "efficientnet_b0": {
-      "model_key": "efficientnet_b0",
+      "name": "EfficientNet-B0",
+      "year": 2019,
+      "paper": "Tan & Le, EfficientNet: Rethinking Model Scaling, ICML 2019",
+      "source": "torchvision",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 4020358,
         "trainable_params": 4020358,
         "size_mb": 15.34,
         "size_kb": 15704.5,
-        "param_str": "4.0M"
+        "param_str": "4.0M",
+        "trainable_param_str": "4.0M"
       },
       "flops": {
         "macs": 408928706,
@@ -300,45 +422,51 @@
         "flops_str": "817.86M"
       },
       "latency_cpu": {
-        "mean_ms": 40.62,
-        "std_ms": 3.9,
-        "median_ms": 40.26,
-        "min_ms": 36.95,
-        "max_ms": 55.72,
-        "p95_ms": 44.04,
+        "mean_ms": 27.62,
+        "std_ms": 1.66,
+        "median_ms": 28.02,
+        "min_ms": 23.7,
+        "max_ms": 30.29,
+        "p95_ms": 29.6,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 9.61,
-        "std_ms": 0.96,
-        "median_ms": 9.2,
-        "min_ms": 8.57,
-        "max_ms": 12.27,
-        "p95_ms": 11.8,
+        "mean_ms": 12.99,
+        "std_ms": 2.19,
+        "median_ms": 12.84,
+        "min_ms": 8.9,
+        "max_ms": 17.41,
+        "p95_ms": 17.02,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 105.6,
-        "16": 1009.7
+        "1": 75.8,
+        "16": 960.1
       },
       "accuracy": {
-        "top1_accuracy": 5.61,
-        "top5_accuracy": 43.43,
-        "total_samples": 23008
+        "top1_accuracy": 5.75,
+        "top5_accuracy": 42.22,
+        "total_samples": 4050
       }
     },
     "convnext_tiny": {
-      "model_key": "convnext_tiny",
+      "name": "ConvNeXt-Tiny",
+      "year": 2022,
+      "paper": "Liu et al., A ConvNet for the 2020s, CVPR 2022",
+      "source": "torchvision",
+      "input_size": 224,
+      "protocol": "head_reset_transfer_baseline",
       "model_info": {
         "total_params": 27827818,
         "trainable_params": 27827818,
         "size_mb": 106.15,
         "size_kb": 108702.4,
-        "param_str": "27.8M"
+        "param_str": "27.8M",
+        "trainable_param_str": "27.8M"
       },
       "flops": {
         "macs": 4487586058,
@@ -347,35 +475,35 @@
         "flops_str": "8.98G"
       },
       "latency_cpu": {
-        "mean_ms": 58.15,
-        "std_ms": 1.7,
-        "median_ms": 58.32,
-        "min_ms": 54.22,
-        "max_ms": 61.55,
-        "p95_ms": 60.45,
+        "mean_ms": 56.22,
+        "std_ms": 5.82,
+        "median_ms": 55.22,
+        "min_ms": 48.45,
+        "max_ms": 70.86,
+        "p95_ms": 69.58,
         "batch_size": 1,
         "device": "cpu",
         "num_runs": 20
       },
       "latency_gpu": {
-        "mean_ms": 7.46,
-        "std_ms": 2.49,
-        "median_ms": 6.33,
-        "min_ms": 4.88,
-        "max_ms": 12.82,
-        "p95_ms": 11.64,
+        "mean_ms": 9.17,
+        "std_ms": 1.53,
+        "median_ms": 8.8,
+        "min_ms": 5.92,
+        "max_ms": 12.55,
+        "p95_ms": 12.02,
         "batch_size": 1,
         "device": "cuda",
         "num_runs": 30
       },
       "throughput": {
-        "1": 162.5,
-        "16": 304.2
+        "1": 101.7,
+        "16": 327.6
       },
       "accuracy": {
-        "top1_accuracy": 12.28,
-        "top5_accuracy": 50.03,
-        "total_samples": 23008
+        "top1_accuracy": 11.38,
+        "top5_accuracy": 46.54,
+        "total_samples": 4050
       }
     }
   }

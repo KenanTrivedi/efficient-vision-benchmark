@@ -1,0 +1,126 @@
+{
+  "model_key": "mobilenet_v3_large",
+  "name": "MobileNetV3-Large",
+  "strategy": "staged",
+  "seed": 42,
+  "split_seed": 42,
+  "input_size": 224,
+  "num_classes": 10,
+  "recipe": {
+    "strategy": "staged",
+    "batch_size": 96,
+    "eval_batch_size": 160,
+    "head_lr": 0.0025,
+    "backbone_lr": 0.00025,
+    "weight_decay": 0.0001,
+    "label_smoothing": 0.1,
+    "linear_probe_epochs": 3,
+    "finetune_epochs": 12,
+    "warmup_epochs": 1,
+    "min_lr_scale": 0.05,
+    "grad_clip_norm": 1.0,
+    "patience": 4,
+    "num_workers": 4
+  },
+  "stage_plan": [
+    {
+      "name": "linear_probe",
+      "epochs": 3,
+      "finetune_strategy": "head"
+    },
+    {
+      "name": "full_finetune",
+      "epochs": 12,
+      "finetune_strategy": "full"
+    }
+  ],
+  "model_info": {
+    "total_params": 4214842,
+    "trainable_params": 4214842,
+    "size_mb": 16.08,
+    "size_kb": 16464.2,
+    "param_str": "4.2M",
+    "trainable_param_str": "4.2M"
+  },
+  "best_val_accuracy": 98.54,
+  "best_epoch": 13,
+  "best_stage": "full_finetune",
+  "baseline_top1_accuracy": 10.07,
+  "test_metrics": {
+    "top1_accuracy": 98.74,
+    "top5_accuracy": 100.0,
+    "total_samples": 4050
+  },
+  "per_class_accuracy": [
+    {
+      "class_name": "AnnualCrop",
+      "support": 450,
+      "correct": 448,
+      "accuracy": 99.56
+    },
+    {
+      "class_name": "Forest",
+      "support": 450,
+      "correct": 449,
+      "accuracy": 99.78
+    },
+    {
+      "class_name": "HerbaceousVegetation",
+      "support": 450,
+      "correct": 435,
+      "accuracy": 96.67
+    },
+    {
+      "class_name": "Highway",
+      "support": 375,
+      "correct": 369,
+      "accuracy": 98.4
+    },
+    {
+      "class_name": "Industrial",
+      "support": 375,
+      "correct": 369,
+      "accuracy": 98.4
+    },
+    {
+      "class_name": "Pasture",
+      "support": 300,
+      "correct": 297,
+      "accuracy": 99.0
+    },
+    {
+      "class_name": "PermanentCrop",
+      "support": 375,
+      "correct": 364,
+      "accuracy": 97.07
+    },
+    {
+      "class_name": "Residential",
+      "support": 450,
+      "correct": 450,
+      "accuracy": 100.0
+    },
+    {
+      "class_name": "River",
+      "support": 375,
+      "correct": 370,
+      "accuracy": 98.67
+    },
+    {
+      "class_name": "SeaLake",
+      "support": 450,
+      "correct": 448,
+      "accuracy": 99.56
+    }
+  ],
+  "artifacts": {
+    "checkpoint": "results/finetune/mobilenet_v3_large/best.pt",
+    "history_csv": "results/finetune/mobilenet_v3_large/history.csv",
+    "training_curves": "results/finetune/mobilenet_v3_large/training_curves.png",
+    "confusion_matrix": "results/finetune/mobilenet_v3_large/confusion_matrix.png",
+    "per_class_accuracy": "results/finetune/mobilenet_v3_large/per_class_accuracy.json",
+    "recipe": "results/finetune/mobilenet_v3_large/resolved_recipe.json"
+  },
+  "elapsed_minutes": 21.44,
+  "accuracy_gain": 88.67
+}

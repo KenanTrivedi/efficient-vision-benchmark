@@ -1,0 +1,16 @@
+{
+  "strategy": "staged",
+  "batch_size": 64,
+  "eval_batch_size": 128,
+  "head_lr": 0.003,
+  "backbone_lr": 0.0003,
+  "weight_decay": 0.0001,
+  "label_smoothing": 0.1,
+  "linear_probe_epochs": 3,
+  "finetune_epochs": 10,
+  "warmup_epochs": 1,
+  "min_lr_scale": 0.05,
+  "grad_clip_norm": 1.0,
+  "patience": 4,
+  "num_workers": 4
+}

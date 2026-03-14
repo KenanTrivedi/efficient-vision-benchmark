@@ -115,16 +115,39 @@ def freeze_for_linear_probe(model: nn.Module) -> nn.Module:
     return model
 
 
+def unfreeze_all_parameters(model: nn.Module) -> nn.Module:
+    """Enable gradients for the full network."""
+    for parameter in model.parameters():
+        parameter.requires_grad = True
+    return model
+
+
 def set_finetune_strategy(model: nn.Module, strategy: str) -> nn.Module:
     """Apply a trainable-parameter strategy to the model."""
     strategy = strategy.lower()
     if strategy in {"head", "linear_probe"}:
         return freeze_for_linear_probe(model)
     if strategy in {"full", "full_finetune"}:
-        for parameter in model.parameters():
-            parameter.requires_grad = True
-        return model
+        return unfreeze_all_parameters(model)
     raise ValueError(f"Unknown finetune strategy '{strategy}'")
+
+
+def get_optimizer_parameter_groups(model: nn.Module) -> Dict[str, list[nn.Parameter]]:
+    """Split parameters into backbone and classifier groups for differential LRs."""
+    classifier = get_classifier_module(model)
+    classifier_ids = {id(parameter) for parameter in classifier.parameters()}
+
+    grouped_parameters = {
+        "backbone": [],
+        "head": [],
+    }
+    for parameter in model.parameters():
+        if not parameter.requires_grad:
+            continue
+        bucket = "head" if id(parameter) in classifier_ids else "backbone"
+        grouped_parameters[bucket].append(parameter)
+
+    return grouped_parameters
 
 
 def get_trainable_parameter_count(model: nn.Module) -> int:

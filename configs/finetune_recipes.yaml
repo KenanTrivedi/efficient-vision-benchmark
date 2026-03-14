@@ -1,0 +1,40 @@
+defaults:
+  strategy: staged
+  batch_size: 64
+  eval_batch_size: 128
+  head_lr: 0.002
+  backbone_lr: 0.0002
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+  linear_probe_epochs: 3
+  finetune_epochs: 12
+  warmup_epochs: 1
+  min_lr_scale: 0.05
+  grad_clip_norm: 1.0
+  patience: 4
+  num_workers: 4
+
+models:
+  mobilevitv2_050:
+    batch_size: 64
+    eval_batch_size: 128
+    head_lr: 0.003
+    backbone_lr: 0.0003
+    linear_probe_epochs: 3
+    finetune_epochs: 10
+
+  mobilenet_v3_large:
+    batch_size: 96
+    eval_batch_size: 160
+    head_lr: 0.0025
+    backbone_lr: 0.00025
+    linear_probe_epochs: 3
+    finetune_epochs: 12
+
+  convnext_tiny:
+    batch_size: 32
+    eval_batch_size: 96
+    head_lr: 0.0015
+    backbone_lr: 0.00015
+    linear_probe_epochs: 2
+    finetune_epochs: 10

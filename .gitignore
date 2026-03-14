@@ -36,4 +36,8 @@ Thumbs.db
 results/finetune/**/*.pt
 results/finetune/**/*.pth
 results/finetune/**/*.onnx
+results/deployment/**/*.onnx
+results/deployment/**/*.engine
+results/deployment/**/*.npz
 results/splits/
+output/

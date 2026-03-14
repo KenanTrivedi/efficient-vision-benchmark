@@ -1,148 +1,99 @@
 # EuroSAT Edge Vision Benchmark
 
-> Benchmarking lightweight vision backbones for top-down imagery, then adapting the strongest candidates with reproducible transfer learning.
+> Benchmark modern edge backbones on aerial imagery, fine-tune the strongest candidates, and export deployment-ready artifacts for embedded inference workflows.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-ee4c2c.svg)](https://pytorch.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.9%2Bcu128-ee4c2c.svg)](https://pytorch.org/)
 [![timm](https://img.shields.io/badge/timm-HuggingFace-yellow.svg)](https://huggingface.co/docs/timm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
-
 ## What This Repository Demonstrates
 
-This repository is designed as an **edge-AI engineering artifact**, not a toy image-classification demo. It evaluates modern efficient backbones on **EuroSAT**, a public aerial/satellite benchmark, and then provides a **transfer-learning pipeline** for adapting the best models to the target domain under realistic deployment constraints:
+This repository is built as an **edge-AI engineering artifact**, not a toy classifier:
 
-- **Latency** on CPU and GPU
-- **Throughput** at batch sizes 1 and 16
-- **Parameter footprint** and **MACs**
-- **Held-out EuroSAT accuracy**
-- **Reproducible fine-tuning** with checkpoints, curves, and summary outputs
+- benchmark lightweight backbones on **EuroSAT** with latency, throughput, MACs, and footprint telemetry
+- fine-tune the most relevant models on deterministic train/val/test splits
+- compare **baseline vs. adapted** accuracy on the same held-out split
+- export the best deployment candidate to **FP32 ONNX** and **INT8 QDQ ONNX**
+- publish the results as a **GitHub Pages project page** and a **PDF packet with hyperlinks**
 
-This is the workflow that matters for embedded UAV vision: measure first, then adapt, then prepare for deployment.
-
----
+That sequence maps directly to the workflow described in the live [Quantum Systems AI Software Engineer role](https://career.quantum-systems.com/o/ai-software-engineer-mfd): prepare data, train and validate models, and optimize them for constrained deployment.
 
 ## Important Methodology Note
 
-The current `01_run_benchmark.py` benchmark is **not a true zero-shot experiment**.
+`01_run_benchmark.py` is **not** a true zero-shot benchmark.
 
-It evaluates a **head-reset transfer baseline**:
+It measures a **head-reset transfer baseline**:
 
-1. Load ImageNet-pretrained weights
-2. Replace the classifier with a fresh 10-class EuroSAT head
-3. Measure latency/footprint immediately
-4. Evaluate the untrained head on the EuroSAT test split
+1. load ImageNet-pretrained weights
+2. replace the classifier with a fresh EuroSAT head
+3. benchmark latency / throughput / footprint
+4. evaluate before any supervised adaptation
 
-That means the baseline accuracy is a **lower bound**, not a claim about genuine zero-shot transfer. The low numbers are expected because the new head has not been trained yet. The repository now makes this explicit and includes `03_finetune_models.py` to perform the actual adaptation step.
+That makes the baseline accuracy a **lower-bound transfer signal**, not a claim about true zero-shot overhead-image performance.
 
----
+The actual adaptation stage is implemented in `03_finetune_models.py`.
 
-## Why EuroSAT
+## Dataset Integrity Fix
 
-[EuroSAT](https://github.com/phelber/EuroSAT) ([Helber et al., 2019](https://ieeexplore.ieee.org/document/8736785)) contains **27,000 Sentinel-2 image patches** across **10 land-use classes** such as `Highway`, `Industrial`, `Residential`, and `River`.
+The repo now validates the local EuroSAT cache before benchmarking or training. During this pass, the previous local cache turned out to be an incomplete 9-class copy. The pipeline now refuses that state and regenerates deterministic splits only against the canonical **27,000 image / 10 class** RGB release.
 
-It is a good public proxy for the visual conditions that matter in aerial robotics:
+## Verified Results
 
-- top-down geometry instead of front-facing perspective
-- texture-heavy scene understanding
-- rotation tolerance
-- domain shift relative to consumer-photo datasets
+### Baseline benchmark snapshot
 
----
-
-## Models Under Test
-
-The registry spans classical baselines and modern mobile architectures:
-
-| Model | Family | Year | Source |
-|---|---|---:|---|
-| ResNet-50 | residual CNN baseline | 2016 | torchvision |
-| MobileNetV3-Large | mobile CNN | 2019 | torchvision |
-| EfficientNet-B0 | compound-scaled CNN | 2019 | torchvision |
-| ConvNeXt-Tiny | modernized CNN | 2022 | torchvision |
-| MobileViTv2-0.5 | mobile ViT hybrid | 2022 | timm |
-| EfficientViT-M0 | efficient attention | 2023 | timm |
-| RepViT-M0.9 | re-parameterized mobile hybrid | 2024 | timm |
-| MobileNetV4-Small | latest mobile CNN | 2024 | timm |
-| FastViT-MCI4 | large hybrid baseline | 2025 | timm |
-
----
-
-## Repository Workflow
-
-### 1. Run the transfer baseline benchmark
-
-```bash
-python 01_run_benchmark.py
-```
-
-Outputs:
-
-- `results/benchmark_results.json`
-- latency, throughput, accuracy, footprint telemetry per model
-
-### 2. Generate plots and GitHub Pages assets
-
-```bash
-python 02_generate_visualizations.py
-```
-
-Outputs:
-
-- `results/figures/accuracy_vs_latency.png`
-- `results/figures/parameter_footprint.png`
-- `results/figures/cpu_gpu_latency_breakdown.png`
-- `docs/index.html`
-- `docs/site_data.json`
-- `docs/site_data.js`
-
-### 3. Fine-tune the recommended models
-
-```bash
-python 03_finetune_models.py
-```
-
-Defaults to the most interesting adaptation targets from the baseline:
-
-- `mobilevitv2_050`
-- `mobilenet_v3_large`
-- `convnext_tiny`
-
-Outputs:
-
-- `results/finetune/<model_key>/best.pt`
-- `results/finetune/<model_key>/history.csv`
-- `results/finetune/<model_key>/training_curves.png`
-- `results/finetune/<model_key>/metrics.json`
-- `results/finetune/summary.json`
-
-After fine-tuning completes, re-run:
-
-```bash
-python 02_generate_visualizations.py
-```
-
-to refresh the dashboard with the fine-tune comparison figure.
-
----
-
-## Current Baseline Snapshot
-
-The existing checked-in results come from the **head-reset transfer baseline** on the held-out EuroSAT test split.
+The current checked-in benchmark was rerun on the corrected 10-class split with CUDA-enabled PyTorch on an **NVIDIA GeForce RTX 3060 Laptop GPU**.
 
 | Model | Top-1 (%) | CPU Latency (ms) | Params |
 |---|---:|---:|---:|
-| ResNet-50 | 12.98 | 85.38 | 23.5M |
-| ConvNeXt-Tiny | 12.28 | 58.32 | 27.8M |
-| MobileViTv2-0.5 | 11.73 | 46.72 | 1.1M |
-| MobileNetV3-Large | 9.94 | 31.32 | 4.2M |
-| EfficientViT-M0 | 8.86 | 73.27 | 2.2M |
-| MobileNetV4-Small | 6.89 | 32.46 | 2.5M |
-| EfficientNet-B0 | 5.61 | 40.26 | 4.0M |
-| FastViT-MCI4 | 3.36 | 898.06 | 318.7M |
+| FastViT-MCI4 | 13.41 | 385.84 | 318.7M |
+| ResNet-50 | 12.89 | 53.10 | 23.5M |
+| RepViT-M0.9 | 12.52 | 50.31 | 4.7M |
+| ConvNeXt-Tiny | 11.38 | 55.22 | 27.8M |
+| EfficientViT-M0 | 11.09 | 31.88 | 2.2M |
+| MobileNetV3-Large | 10.07 | 19.87 | 4.2M |
+| MobileNetV4-Small | 8.00 | 15.62 | 2.5M |
+| MobileViTv2-0.5 | 7.56 | 30.39 | 1.1M |
+| EfficientNet-B0 | 5.75 | 28.02 | 4.0M |
 
-These numbers are useful for **latency and footprint screening**, but the scientific story only becomes complete after running the fine-tuning stage.
+These numbers are useful for **screening deployment characteristics**, not for deciding final model quality.
+
+### Fine-tuning results
+
+The staged transfer recipe uses:
+
+- linear-probe warmup on the classifier head
+- full fine-tuning with a lower backbone learning rate
+- AdamW, cosine decay, warmup, label smoothing, gradient clipping, AMP
+
+Held-out EuroSAT test results:
+
+| Model | Top-1 (%) | Gain vs. baseline | Why it matters |
+|---|---:|---:|---|
+| ConvNeXt-Tiny | 99.14 | +87.76 pts | highest absolute accuracy |
+| MobileNetV3-Large | 98.74 | +88.67 pts | best deployment candidate |
+| MobileViTv2-0.5 | 97.90 | +90.34 pts | strongest tiny-model result |
+
+This is the key technical takeaway: **supervised adaptation closes the domain gap almost completely** on the corrected EuroSAT split.
+
+### Deployment export result
+
+For deployment export, the best practical candidate is **MobileNetV3-Large**. It stays within 1 percentage point of the top fine-tuned score while preserving a much stronger latency profile than ConvNeXt-Tiny.
+
+Generated artifacts:
+
+- FP32 ONNX export: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_fp32.onnx`
+- ONNX validation against PyTorch outputs
+- INT8 QDQ ONNX export: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_int8_qdq.onnx`
+- calibration dataset: `results/deployment/mobilenet_v3_large/calibration_data.npz`
+
+Current status:
+
+- ONNX export: complete
+- INT8 quantization: complete
+- TensorRT engine build: implemented and auto-attempted, but skipped on this machine because local `trtexec` / TensorRT tooling is not installed
+
+## Figures
 
 ### Accuracy vs. CPU Latency
 
@@ -156,37 +107,48 @@ These numbers are useful for **latency and footprint screening**, but the scient
 
 ![CPU vs GPU Latency](results/figures/cpu_gpu_latency_breakdown.png)
 
----
+### Baseline vs. Fine-Tuned Accuracy
 
-## GitHub Pages Dashboard
+![Fine-Tuned Accuracy Lift](results/figures/baseline_vs_finetuned_accuracy.png)
 
-The repo now includes a recruiter-friendly static site in [`docs/`](docs/) that summarizes:
+## GitHub Pages + PDF
 
-- the benchmark protocol
-- the latest generated figures
-- a normalized comparison table
-- the recommended fine-tune targets
-- explicit alignment to the Quantum Systems AI Software Engineer role
+The repo includes a static recruiter-facing project page in `docs/` and a GitHub Pages workflow in `.github/workflows/deploy-pages.yml`.
 
-Once GitHub Pages is enabled for the `docs/` folder, the dashboard can be used as a lightweight portfolio page and exported to PDF.
+Expected public URLs after push:
 
----
+- Project page: [https://kenantrivedi.github.io/efficient-vision-benchmark/](https://kenantrivedi.github.io/efficient-vision-benchmark/)
+- Repository: [https://github.com/KenanTrivedi/efficient-vision-benchmark](https://github.com/KenanTrivedi/efficient-vision-benchmark)
 
-## Recommended Next Step
+The repo also generates a PDF-friendly portfolio packet with highlighted hyperlinks:
 
-The strongest next technical addition after fine-tuning is:
+- `docs/assets/EuroSAT_Edge_Vision_Benchmark_Portfolio.pdf`
 
-**INT8 quantization + ONNX/TensorRT export of the best adapted model**
+## Repository Workflow
 
-Why:
+### 1. Run the transfer baseline benchmark
 
-- the live Quantum Systems posting explicitly calls out deployment on embedded UxV hardware
-- it also highlights optimization for resource-constrained environments, including **quantization, pruning, and distillation**
-- once EuroSAT adaptation is demonstrated, deployment optimization is the most credible follow-up
+```bash
+python 01_run_benchmark.py
+```
 
-Official role: [Quantum Systems - AI Software Engineer (m/f/d)](https://career.quantum-systems.com/o/ai-software-engineer-mfd)
+### 2. Fine-tune the selected models
 
----
+```bash
+python 03_finetune_models.py
+```
+
+### 3. Export deployment artifacts
+
+```bash
+python 04_export_deployment_artifacts.py --model-key mobilenet_v3_large
+```
+
+### 4. Regenerate figures and the project page
+
+```bash
+python 02_generate_visualizations.py
+```
 
 ## Project Structure
 
@@ -195,7 +157,9 @@ efficient-vision-benchmark/
 ├── 01_run_benchmark.py
 ├── 02_generate_visualizations.py
 ├── 03_finetune_models.py
+├── 04_export_deployment_artifacts.py
 ├── configs/
+│   ├── finetune_recipes.yaml
 │   └── models.yaml
 ├── docs/
 │   ├── index.html
@@ -205,7 +169,8 @@ efficient-vision-benchmark/
 ├── results/
 │   ├── benchmark_results.json
 │   ├── figures/
-│   └── finetune/
+│   ├── finetune/
+│   └── deployment/
 ├── src/
 │   ├── data.py
 │   ├── metrics.py
@@ -216,21 +181,13 @@ efficient-vision-benchmark/
 └── requirements.txt
 ```
 
----
-
 ## References
 
-1. He, K., Zhang, X., Ren, S., & Sun, J. *Deep Residual Learning for Image Recognition.* CVPR 2016. [arXiv](https://arxiv.org/abs/1512.03385)
-2. Howard, A., et al. *Searching for MobileNetV3.* ICCV 2019. [arXiv](https://arxiv.org/abs/1905.02244)
-3. Tan, M. & Le, Q. *EfficientNet: Rethinking Model Scaling.* ICML 2019. [arXiv](https://arxiv.org/abs/1905.11946)
-4. Liu, Z., et al. *A ConvNet for the 2020s.* CVPR 2022. [arXiv](https://arxiv.org/abs/2201.03545)
-5. Mehta, S. & Rastegari, M. *Separable Self-attention for Mobile Vision Transformers.* TPAMI 2023. [arXiv](https://arxiv.org/abs/2206.02680)
-6. Cai, H., et al. *EfficientViT.* ICCV 2023. [arXiv](https://arxiv.org/abs/2305.07027)
-7. Wang, A., et al. *RepViT.* CVPR 2024. [arXiv](https://arxiv.org/abs/2307.09283)
-8. Qin, D., et al. *MobileNetV4.* CVPR 2024. [arXiv](https://arxiv.org/abs/2404.10518)
-9. Helber, P., et al. *EuroSAT.* IEEE JSTARS 2019. [IEEE](https://ieeexplore.ieee.org/document/8736785)
-
----
+1. Helber, P., et al. *EuroSAT: A Novel Dataset and Deep Learning Benchmark for Land Use and Land Cover Classification.* IEEE JSTARS 2019. [IEEE](https://ieeexplore.ieee.org/document/8736785)
+2. Mehta, S. & Rastegari, M. *Separable Self-attention for Mobile Vision Transformers.* TPAMI 2023. [arXiv](https://arxiv.org/abs/2206.02680)
+3. Wang, A., et al. *RepViT: Revisiting Mobile CNN From ViT Perspective.* CVPR 2024. [arXiv](https://arxiv.org/abs/2307.09283)
+4. Qin, D., et al. *MobileNetV4: Universal Models for the Mobile Ecosystem.* CVPR 2024. [arXiv](https://arxiv.org/abs/2404.10518)
+5. Liu, Z., et al. *A ConvNet for the 2020s.* CVPR 2022. [arXiv](https://arxiv.org/abs/2201.03545)
 
 ## License
 

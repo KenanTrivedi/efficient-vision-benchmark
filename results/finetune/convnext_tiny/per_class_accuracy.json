@@ -1,0 +1,62 @@
+[
+  {
+    "class_name": "AnnualCrop",
+    "support": 450,
+    "correct": 445,
+    "accuracy": 98.89
+  },
+  {
+    "class_name": "Forest",
+    "support": 450,
+    "correct": 449,
+    "accuracy": 99.78
+  },
+  {
+    "class_name": "HerbaceousVegetation",
+    "support": 450,
+    "correct": 440,
+    "accuracy": 97.78
+  },
+  {
+    "class_name": "Highway",
+    "support": 375,
+    "correct": 369,
+    "accuracy": 98.4
+  },
+  {
+    "class_name": "Industrial",
+    "support": 375,
+    "correct": 375,
+    "accuracy": 100.0
+  },
+  {
+    "class_name": "Pasture",
+    "support": 300,
+    "correct": 297,
+    "accuracy": 99.0
+  },
+  {
+    "class_name": "PermanentCrop",
+    "support": 375,
+    "correct": 372,
+    "accuracy": 99.2
+  },
+  {
+    "class_name": "Residential",
+    "support": 450,
+    "correct": 447,
+    "accuracy": 99.33
+  },
+  {
+    "class_name": "River",
+    "support": 375,
+    "correct": 373,
+    "accuracy": 99.47
+  },
+  {
+    "class_name": "SeaLake",
+    "support": 450,
+    "correct": 448,
+    "accuracy": 99.56
+  }
+]

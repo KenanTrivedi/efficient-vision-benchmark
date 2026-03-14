@@ -28,7 +28,7 @@ fastvit_mci4:
 
 repvit_m0_9:
   name: "RepViT-M0.9"
-  model_id: "repvit_m0_9.dist_in1k"
+  model_id: "repvit_m0_9"
   source: "timm"
   input_size: 224
   year: 2024

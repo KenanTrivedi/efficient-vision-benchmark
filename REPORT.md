@@ -2,124 +2,169 @@
 
 ## Executive Summary
 
-This repository now has two distinct stages:
+This repository now demonstrates a complete, defensible embedded-vision workflow:
 
-1. **Transfer baseline benchmark**  
-   Pretrained backbones are adapted to EuroSAT by resetting the classifier head to 10 classes and evaluating immediately. This is useful for screening latency, throughput, and footprint, but the accuracy numbers should be interpreted as a lower-bound transfer baseline.
+1. benchmark modern efficient backbones on a corrected EuroSAT split
+2. fine-tune the strongest candidates with a staged transfer recipe
+3. export the best deployment candidate to ONNX and INT8 ONNX
+4. publish the outcome as a recruiter-facing web page and PDF packet
 
-2. **Fine-tuning pipeline**  
-   The new `03_finetune_models.py` script performs supervised transfer learning on deterministic EuroSAT train/val/test splits and stores checkpoints, curves, and summary metrics for the most relevant models.
+The result is substantially stronger than a standard "train a classifier" portfolio project because it shows the full engineering loop from dataset handling to deployment-oriented optimization.
 
-That combination is much more defensible than the earlier framing, because it separates:
+## What Changed In This Pass
 
-- raw deployment characteristics
-- pre-adaptation baseline behavior
-- post-adaptation performance
+### 1. The EuroSAT cache was repaired
 
-## Why The Earlier Framing Needed Correction
+The local dataset copy used earlier was not the canonical EuroSAT RGB release. It contained only 9 classes and 23,008 samples. The pipeline now validates the cache explicitly and rejects incomplete local copies before benchmarking or training.
 
-Replacing a pretrained classifier with a fresh 10-class head means the head starts random. Evaluating that head without training is not a true zero-shot transfer measurement. The previous README language overstated what the benchmark proved.
+The corrected local dataset now matches the standard release:
 
-The corrected framing is:
+- 27,000 RGB image patches
+- 10 land-use classes
+- deterministic split: 18,900 train / 4,050 val / 4,050 test
 
-- **Benchmark script:** head-reset transfer baseline
-- **Training script:** the real EuroSAT adaptation stage
+This matters because otherwise all benchmark and fine-tune numbers would be anchored to the wrong task definition.
 
-This matters because a reviewer with ML experience will notice the difference immediately.
+### 2. The model registry was refreshed
 
-## What Was Improved
+The `RepViT-M0.9` timm identifier in the registry had drifted. It now resolves correctly against current timm weights, so the benchmark table no longer contains a missing row caused by a stale pretrained tag.
 
-### 1. Data handling
+### 3. The fine-tuning recipe was upgraded
 
-- deterministic EuroSAT train/val/test splits
-- split metadata cached in `results/splits/`
-- train-time aerial augmentations
-- evaluation on a held-out test split instead of the full dataset
+`03_finetune_models.py` is now a staged transfer-learning pipeline rather than a single fixed loop.
 
-### 2. Visualization quality
+The default recipe uses:
 
-The original plots had two practical problems:
+- linear-probe warmup
+- full fine-tuning with differential learning rates
+- AdamW
+- cosine decay with warmup
+- AMP on CUDA
+- label smoothing
+- gradient clipping
+- per-model recipe overrides via `configs/finetune_recipes.yaml`
 
-- labels collided and became unreadable
-- large outliers flattened the entire parameter comparison
+It also writes:
 
-The refreshed generator fixes this by using:
+- best checkpoint
+- history CSV
+- training curves
+- confusion matrix
+- per-class accuracy JSON
+- summary JSON for downstream reporting
 
-- a log-scale latency axis for the scatter plot
-- a Pareto frontier overlay
-- bubble sizes scaled by the square root of parameter count
-- a log-scale parameter chart
-- a CPU vs. GPU latency breakdown instead of the stale CIFAR-era radar chart
+### 4. Deployment export was added
 
-### 3. Recruiter-facing presentation
+`04_export_deployment_artifacts.py` now exports the selected fine-tuned checkpoint as:
 
-A new static site in `docs/` now acts as a GitHub Pages dashboard:
+- FP32 ONNX
+- validated ONNX outputs against PyTorch
+- calibration dataset for PTQ
+- INT8 QDQ ONNX
+- optional TensorRT engines when `trtexec` is available
 
-- concise benchmark narrative
-- generated figures
-- normalized model table
-- explicit role alignment for the Quantum Systems position
+On this machine, TensorRT engine creation is implemented but skipped because local TensorRT tooling is not installed. That is reported explicitly in `results/deployment/summary.json`.
 
-This is a better artifact for a recruiter than a raw notebook or a README alone.
+### 5. The project page was rebuilt
 
-### 4. Fine-tuning capability
+The `docs/` site now acts as a proper project page rather than a bare static dashboard:
 
-The new training pipeline supports:
+- clear repo / report / PDF links
+- fine-tune result section
+- deployment artifact section
+- print-specific link highlighting for recruiter PDFs
+- GitHub Pages workflow for automatic publishing from `main`
 
-- recommended default models:
-  - `mobilevitv2_050`
-  - `mobilenet_v3_large`
-  - `convnext_tiny`
-- `head` or `full` fine-tuning strategies
-- early stopping on validation accuracy
-- checkpoints, CSV logs, and training curves
-- summary JSON for downstream dashboard updates
+## Measured Results
 
-## Why These Models Are The Right Fine-Tune Targets
+### Baseline benchmark
 
-Based on the current baseline sweep:
+The corrected baseline run measures the head-reset transfer lower bound on the 10-class EuroSAT task.
 
-- **MobileViTv2-0.5** offers the most attractive accuracy-per-parameter ratio.
-- **MobileNetV3-Large** is the fastest CPU model in the practical cluster.
-- **ConvNeXt-Tiny** gives a heavier pure-CNN reference point against the mobile hybrids.
+Headline observations:
 
-This is a balanced trio for testing three useful hypotheses:
+- **FastViT-MCI4** achieved the highest raw baseline top-1 accuracy at **13.41%**, but at an edge-inappropriate **385.84 ms CPU latency**
+- **MobileNetV4-Small** is the fastest screened model at **15.62 ms CPU latency**
+- **RepViT-M0.9** and **MobileNetV3-Large** are the most interesting practical baseline references once accuracy and latency are considered together
 
-1. Does a tiny hybrid model adapt well enough to dominate the Pareto curve?
-2. Does the latency winner stay compelling after supervised adaptation?
-3. Does a larger CNN recover more strongly than the mobile models once trained on aerial data?
+These baseline numbers are useful for **screening**, not for final model selection, because the classifier head is still untrained.
 
-## Role Alignment With Quantum Systems
+### Fine-tuned models
 
-The live Quantum Systems job posting emphasizes:
+Held-out EuroSAT test accuracy after staged adaptation:
 
-- preparing/selecting data
-- training and validating models
-- deployment on embedded UxV platforms
-- optimization for constrained hardware, including quantization/pruning/distillation
-- hands-on edge deployment on Jetson, ARM, FPGA, or custom SoCs
+| Model | Test Top-1 | Gain vs. Baseline | Role in the portfolio |
+|---|---:|---:|---|
+| ConvNeXt-Tiny | 99.14% | +87.76 pts | absolute accuracy winner |
+| MobileNetV3-Large | 98.74% | +88.67 pts | best deployment candidate |
+| MobileViTv2-0.5 | 97.90% | +90.34 pts | strongest tiny-model transfer result |
 
-That makes the most logical sequence:
+These results validate the central engineering claim of the project:
 
-1. benchmark deployment characteristics
-2. fine-tune on aerial data
-3. quantize and export the strongest model for embedded inference
+**top-down aerial imagery needs supervised adaptation, but modern pretrained backbones can recover to near-ceiling performance once the domain shift is addressed properly**
 
-## Recommended Next Step After Fine-Tuning
+## Why MobileNetV3-Large Was Chosen For Export
 
-Once the fine-tuned results are generated, add:
+ConvNeXt-Tiny achieved the highest accuracy, but it is not the most practical embedded deployment target in this set.
 
-**INT8 quantization + ONNX/TensorRT export**
+`MobileNetV3-Large` was selected for deployment export because it is:
 
-That will produce the strongest end-to-end story for the target role:
+- within **0.40 percentage points** of the best fine-tuned accuracy
+- materially faster in the baseline latency profile
+- much smaller and more realistic for edge packaging
 
-- data pipeline
-- model selection
-- supervised adaptation
-- deployment optimization
+This is the more mature engineering decision for a UAV-facing portfolio artifact. Accuracy alone is not the correct optimization target.
+
+## Deployment Export Outcome
+
+The deployment stage produced:
+
+- FP32 ONNX: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_fp32.onnx`
+- INT8 QDQ ONNX: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_int8_qdq.onnx`
+- calibration data: `results/deployment/mobilenet_v3_large/calibration_data.npz`
+
+Measured artifact sizes:
+
+- FP32 ONNX: **16.07 MB**
+- INT8 QDQ ONNX: **4.25 MB**
+
+That is roughly a **3.8x footprint reduction** from the ONNX export path alone.
+
+The script also validates ONNX outputs against PyTorch. For the exported MobileNetV3-Large checkpoint, the recorded difference was small:
+
+- max absolute diff: **0.003182**
+- mean absolute diff: **0.001391**
+
+## Presentation Layer
+
+The static site and PDF now do real work:
+
+- explain the corrected methodology
+- show the baseline and fine-tuned visuals
+- surface the deployment candidate explicitly
+- provide direct recruiter navigation to the repo, report, role posting, and PDF
+
+The PDF export also uses print-specific hyperlink styling so the links remain visible and scannable after export.
+
+## Remaining Limitation
+
+The one substantive environment limitation left is **local TensorRT availability**.
+
+The export path is already implemented to build TensorRT engines automatically, but on this machine:
+
+- `trtexec` is not installed
+- TensorRT engine files were therefore not generated
+
+That should be presented honestly. The repo now shows the correct behavior: export ONNX and INT8 ONNX successfully, and report TensorRT as skipped rather than fabricating an engine artifact.
 
 ## Bottom Line
 
-The repository is materially stronger now because it no longer relies on a misleading “zero-shot” story. It presents a cleaner and more realistic engineering sequence:
+The repository is now in a much stronger state than the original benchmark:
 
-**screen models -> adapt them -> compare the lift -> prepare for edge deployment**
+- the data pipeline is validated
+- the baseline is rerun on the correct task
+- the fine-tuning results are real and strong
+- the export stage produces usable deployment artifacts
+- the public-facing site and PDF are recruiter-ready
+
+As a job application artifact, the project now reads like an internal edge-vision evaluation tool, which is exactly the right direction for the target Quantum Systems role.
