@@ -17,14 +17,14 @@ efficientvit_m0:
   paper: "Cai et al. (MIT), EfficientViT: Memory Efficient Vision Transformer, ICCV 2023"
   description: "Linear attention architecture dominating edge deployments; highly memory-bound hardware optimized."
 
-fastvit_t8:
-  name: "FastViT-T8"
-  model_id: "fastvit_t8.apple_in1k"
+fastvit_mci4:
+  name: "FastViT-MCI4"
+  model_id: "fastvit_mci4"
   source: "timm"
   input_size: 224
-  year: 2023
-  paper: "Vasu et al. (Apple), FastViT: A Fast Hybrid Vision Transformer, ICCV 2023"
-  description: "Apple's hybrid CNN-Transformer architecture optimized for extremely fast on-device inference latency."
+  year: 2025
+  paper: "Apple Machine Learning Research, FastViT (MCI Iteration), 2025"
+  description: "Apple's 2025 multi-modal / edge hybrid Vision Transformer update. Pushing SOTA latency limits."
 
 repvit_m0_9:
   name: "RepViT-M0.9"

@@ -18,9 +18,9 @@ To ensure reproducibility and fairness, all models were evaluated using the foll
 
 ## Key Findings
 
-1. **The Modern CNN Revival**: `ConvNeXt-Tiny` successfully bridges the gap between traditional CNN efficiency and Vision Transformer (ViT) performance scale. For tasks where pure CNN topologies are preferred (due to hardware compiler support or legacy deployment pipelines), it offers an excellent accuracy/latency trade-off without the self-attention overhead.
-2. **Transformer Trade-offs**: While models like `Swin-Tiny` and `MaxViT-Tiny` achieve dominant accuracy figures, their latency footprint on non-optimized hardware can be significantly larger than comparably-sized CNNs. They remain robust choices for high-end edge devices (e.g., NVIDIA Jetson Orin) where tensor cores can accelerate attention mechanisms.
-3. **Sustained Mobile Excellence**: The `MobileNetV3` and `EfficientNet` families continue to provide the best pure "compute-to-accuracy" ratio for heavily constrained environments. `EfficientNetV2-S`, in particular, demonstrates the power of Fused-MBConv layers for minimizing memory bottlenecks during inference.
+1. **The Modern edge ViTs (2024-2025)**: Models like `EfficientViT` and `FastViT-MCI4` effectively demonstrate how Apple and MIT researchers have squeezed Transformer-level accuracy into memory-bound edge environments. They are the new gold standard for UAVs or real-time dashcam deployments.
+2. **Re-parameterized Speed (RepViT)**: The benchmarking of `RepViT` highlights a structural fusion of Transformers and CNNs that sustains massive throughput on non-optimized edge hardware (CPUs) without sacrificing representation power.
+3. **Universal Architectures (MobileNetV4)**: The introduction of Google's 2024 `MobileNetV4` sets a new baseline for hardware abstraction, proving that classical mobile CNN topologies still push boundaries when intelligently scaled.
 
 ## Relevance to Applied ML & Data Pipelines
 This repository serves as a blueprint for structured quantitative evaluation—a critical skill set for an **AI Software Engineer**. It demonstrates:

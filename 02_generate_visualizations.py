@@ -90,7 +90,7 @@ def create_accuracy_latency_scatter(models_data: dict, output_path: Path):
 
     plt.title("Edge Deployment Trade-offs: Accuracy vs. CPU Latency", fontsize=14, pad=15)
     plt.xlabel("Inference Latency (ms) [Lower is Better]")
-    plt.ylabel("CIFAR-10 Top-1 Accuracy (%) [Higher is Better]")
+    plt.ylabel("EuroSAT Aerial Top-1 Accuracy (%) [Higher is Better]")
     
     # Minimal legend
     handles, labels = scatter.get_legend_handles_labels()

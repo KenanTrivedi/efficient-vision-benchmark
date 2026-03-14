@@ -90,8 +90,9 @@ def run_benchmark_pipeline(model_keys: list, device: str):
     print(f" → Executing Benchmark on [{device.upper()}] for {len(model_keys)} models...")
     print("======================================================\n")
 
-    print("[*] Automatically pre-loading CIFAR-10 (Auto-downloading if missing)...")
-    _, test_loader = get_cifar10_loaders(input_size=224, batch_size=64, num_workers=2)
+    print("[*] Automatically pre-loading EuroSAT Aerial Imagery (Auto-downloading if missing)...")
+    from src.data import get_eurosat_loaders
+    _, test_loader = get_eurosat_loaders(input_size=224, batch_size=64, num_workers=2)
 
     all_results = {}
     for i, model_key in enumerate(model_keys, 1):
@@ -131,7 +132,7 @@ def run_benchmark_pipeline(model_keys: list, device: str):
         )
         
         # Accuracy Execution
-        print("  6. Running standard CIFAR-10 evaluation loop...")
+        print("  6. Running standard aerial dataset evaluation loop...")
         accuracy = evaluate_accuracy(model, test_loader, device=device)
         
         print(f"  => Complete! {accuracy['top1_accuracy']}% Top-1 ACC 🚀")
