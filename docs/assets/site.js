@@ -13,6 +13,7 @@
   const links = data.links || {};
   const finetune = data.finetune || {};
   const deployment = data.deployment || {};
+  const qualitative = data.qualitative || {};
 
   const setText = (id, value) => {
     const element = document.getElementById(id);
@@ -140,6 +141,16 @@
   if (figures.finetune_accuracy_delta) {
     setImage("figure-finetune", figures.finetune_accuracy_delta);
     document.getElementById("finetune-figure-card")?.classList.remove("hidden");
+  }
+
+  if (qualitative.available && (figures.dataset_mosaic || figures.qualitative_before_after)) {
+    setText(
+      "qualitative-summary-copy",
+      qualitative.summary || "Real EuroSAT test imagery before and after supervised adaptation."
+    );
+    setImage("figure-dataset-mosaic", figures.dataset_mosaic);
+    setImage("figure-qualitative", figures.qualitative_before_after);
+    document.getElementById("qualitative-section")?.classList.remove("hidden");
   }
 
   const artifactGrid = document.getElementById("artifact-grid");

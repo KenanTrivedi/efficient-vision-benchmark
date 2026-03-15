@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import shutil
 import subprocess
 import sys
@@ -15,8 +16,13 @@ from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+from torch.utils.data import DataLoader
 
+from src.data import DEFAULT_SEED, TransformedSubset, _load_base_dataset, get_or_create_eurosat_splits, get_transforms
 from src.models import load_model_config
+from src.models import get_model
+from src.training import seed_everything
 
 
 RESULTS_FILE = Path("results/benchmark_results.json")
@@ -49,6 +55,15 @@ PALETTE = [
 ]
 
 MODEL_CONFIG = load_model_config()
+QUALITATIVE_SAMPLE_COUNT = 6
+QUALITATIVE_PREFERRED_CLASSES = [
+    "AnnualCrop",
+    "Highway",
+    "Industrial",
+    "Residential",
+    "River",
+    "SeaLake",
+]
 
 
 def load_json(path: Path) -> Dict:
@@ -337,6 +352,316 @@ def plot_finetune_accuracy_delta(baseline_records: List[Dict], finetune_summary:
     return True
 
 
+def prettify_class_name(name: str) -> str:
+    return re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+
+
+def load_model_for_inference(
+    model_key: str,
+    *,
+    num_classes: int,
+    device: str,
+    checkpoint_path: str | None = None,
+) -> torch.nn.Module:
+    model = get_model(model_key, num_classes=num_classes, pretrained=True)
+    if checkpoint_path:
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        state_dict = checkpoint.get("state_dict", checkpoint)
+        model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+    return model
+
+
+def choose_qualitative_model_key(
+    finetune_summary: Dict | None,
+    deployment_summary: Dict | None,
+) -> str | None:
+    selected_model = (deployment_summary or {}).get("selected_model") or {}
+    if selected_model.get("model_key"):
+        return selected_model["model_key"]
+
+    leaderboard = (finetune_summary or {}).get("leaderboard") or []
+    if leaderboard:
+        return leaderboard[0]["model_key"]
+
+    return None
+
+
+def build_qualitative_examples(
+    baseline_payload: Dict,
+    finetune_summary: Dict | None,
+    deployment_summary: Dict | None,
+    *,
+    data_dir: str = "./data",
+) -> Dict | None:
+    model_key = choose_qualitative_model_key(finetune_summary, deployment_summary)
+    if not model_key or not finetune_summary:
+        return None
+
+    finetuned_model_summary = (finetune_summary.get("models") or {}).get(model_key)
+    if not finetuned_model_summary:
+        return None
+
+    checkpoint_path = ((finetuned_model_summary.get("artifacts") or {}).get("checkpoint"))
+    if not checkpoint_path or not Path(checkpoint_path).exists():
+        return None
+
+    split_payload = get_or_create_eurosat_splits(data_dir=data_dir, seed=DEFAULT_SEED)
+    base_dataset = _load_base_dataset(data_dir=data_dir)
+    class_names = split_payload["class_names"]
+    test_indices = list(split_payload["indices"]["test"])
+    num_classes = len(class_names)
+
+    model_name = finetuned_model_summary.get("name") or baseline_payload.get("models", {}).get(model_key, {}).get("name", model_key)
+    input_size = int(
+        finetuned_model_summary.get("input_size")
+        or baseline_payload.get("models", {}).get(model_key, {}).get("input_size")
+        or 224
+    )
+    eval_transform = get_transforms(input_size=input_size)[1]
+    eval_dataset = TransformedSubset(base_dataset, test_indices, transform=eval_transform)
+    dataloader = DataLoader(
+        eval_dataset,
+        batch_size=96,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=torch.cuda.is_available(),
+    )
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    seed_everything(DEFAULT_SEED)
+    baseline_model = load_model_for_inference(model_key, num_classes=num_classes, device=device)
+    finetuned_model = load_model_for_inference(
+        model_key,
+        num_classes=num_classes,
+        device=device,
+        checkpoint_path=checkpoint_path,
+    )
+
+    labels_all: list[np.ndarray] = []
+    baseline_predictions: list[np.ndarray] = []
+    baseline_confidences: list[np.ndarray] = []
+    finetuned_predictions: list[np.ndarray] = []
+    finetuned_confidences: list[np.ndarray] = []
+
+    with torch.inference_mode():
+        for images, labels in dataloader:
+            images = images.to(device, non_blocking=True)
+            baseline_probs = torch.softmax(baseline_model(images), dim=1)
+            finetuned_probs = torch.softmax(finetuned_model(images), dim=1)
+
+            baseline_conf, baseline_pred = baseline_probs.max(dim=1)
+            finetuned_conf, finetuned_pred = finetuned_probs.max(dim=1)
+
+            labels_all.append(labels.numpy())
+            baseline_predictions.append(baseline_pred.cpu().numpy())
+            baseline_confidences.append(baseline_conf.cpu().numpy())
+            finetuned_predictions.append(finetuned_pred.cpu().numpy())
+            finetuned_confidences.append(finetuned_conf.cpu().numpy())
+
+    del baseline_model
+    del finetuned_model
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    labels = np.concatenate(labels_all)
+    baseline_pred = np.concatenate(baseline_predictions)
+    baseline_conf = np.concatenate(baseline_confidences)
+    finetuned_pred = np.concatenate(finetuned_predictions)
+    finetuned_conf = np.concatenate(finetuned_confidences)
+
+    dataset_examples: Dict[int, Dict] = {}
+    for dataset_index in test_indices:
+        _, label = base_dataset[dataset_index]
+        label = int(label)
+        if label not in dataset_examples:
+            dataset_examples[label] = {"dataset_index": dataset_index, "label": label}
+        if len(dataset_examples) == num_classes:
+            break
+
+    candidate_by_label: Dict[int, Dict] = {}
+    for local_index, dataset_index in enumerate(test_indices):
+        label = int(labels[local_index])
+        if int(finetuned_pred[local_index]) != label or int(baseline_pred[local_index]) == label:
+            continue
+
+        improvement_margin = float(finetuned_conf[local_index] - baseline_conf[local_index])
+        current = candidate_by_label.get(label)
+        if current is None or improvement_margin > current["margin"]:
+            candidate_by_label[label] = {
+                "dataset_index": dataset_index,
+                "label": label,
+                "baseline_prediction": int(baseline_pred[local_index]),
+                "baseline_confidence": float(baseline_conf[local_index]),
+                "finetuned_prediction": int(finetuned_pred[local_index]),
+                "finetuned_confidence": float(finetuned_conf[local_index]),
+                "margin": improvement_margin,
+            }
+
+    selected_examples: list[Dict] = []
+    selected_labels: set[int] = set()
+    for class_name in QUALITATIVE_PREFERRED_CLASSES:
+        if class_name not in class_names:
+            continue
+        label = class_names.index(class_name)
+        if label in candidate_by_label:
+            selected_examples.append(candidate_by_label[label])
+            selected_labels.add(label)
+
+    remaining_candidates = sorted(
+        (candidate for label, candidate in candidate_by_label.items() if label not in selected_labels),
+        key=lambda candidate: candidate["margin"],
+        reverse=True,
+    )
+    for candidate in remaining_candidates:
+        if len(selected_examples) >= QUALITATIVE_SAMPLE_COUNT:
+            break
+        selected_examples.append(candidate)
+
+    selected_examples = selected_examples[:QUALITATIVE_SAMPLE_COUNT]
+    if not selected_examples:
+        return None
+
+    return {
+        "model_key": model_key,
+        "model_name": model_name,
+        "class_names": class_names,
+        "dataset_examples": dataset_examples,
+        "selected_examples": selected_examples,
+    }
+
+
+def plot_dataset_mosaic(qualitative_payload: Dict, output_path: Path) -> bool:
+    dataset_examples = qualitative_payload.get("dataset_examples") or {}
+    class_names = qualitative_payload.get("class_names") or []
+    if not dataset_examples or not class_names:
+        return False
+
+    base_dataset = _load_base_dataset(data_dir="./data")
+    fig, axes = plt.subplots(2, 5, figsize=(14.6, 6.5))
+    fig.patch.set_facecolor(BACKGROUND)
+
+    for axis in axes.flat:
+        axis.set_facecolor(PANEL)
+        axis.set_xticks([])
+        axis.set_yticks([])
+        for spine in axis.spines.values():
+            spine.set_color("#d6d3d1")
+            spine.set_linewidth(1.0)
+
+    for axis, label in zip(axes.flat, range(len(class_names))):
+        sample = dataset_examples.get(label)
+        if sample is None:
+            axis.axis("off")
+            continue
+        image, _ = base_dataset[sample["dataset_index"]]
+        axis.imshow(image, interpolation="nearest")
+        axis.set_title(prettify_class_name(class_names[label]), fontsize=10, color=INK, pad=8)
+
+    fig.suptitle("Real EuroSAT Test Tiles Across All 10 Classes", fontsize=16, color=INK, y=0.98)
+    fig.text(
+        0.5,
+        0.02,
+        "One held-out EuroSAT RGB tile per class from the deterministic test split.",
+        ha="center",
+        va="bottom",
+        color=SUBTLE,
+        fontsize=10,
+    )
+    fig.tight_layout(rect=(0, 0.05, 1, 0.95))
+    fig.savefig(output_path, dpi=260, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
+def plot_qualitative_before_after(qualitative_payload: Dict, output_path: Path) -> bool:
+    selected_examples = qualitative_payload.get("selected_examples") or []
+    class_names = qualitative_payload.get("class_names") or []
+    model_name = qualitative_payload.get("model_name", "Fine-tuned model")
+    if not selected_examples or not class_names:
+        return False
+
+    base_dataset = _load_base_dataset(data_dir="./data")
+    fig, axes = plt.subplots(2, 3, figsize=(15.4, 10.2))
+    fig.patch.set_facecolor(BACKGROUND)
+
+    for axis in axes.flat:
+        axis.set_facecolor(PANEL)
+        axis.set_xticks([])
+        axis.set_yticks([])
+        for spine in axis.spines.values():
+            spine.set_color("#d6d3d1")
+            spine.set_linewidth(1.0)
+
+    for axis, sample in zip(axes.flat, selected_examples):
+        image, _ = base_dataset[sample["dataset_index"]]
+        true_name = prettify_class_name(class_names[sample["label"]])
+        baseline_name = prettify_class_name(class_names[sample["baseline_prediction"]])
+        finetuned_name = prettify_class_name(class_names[sample["finetuned_prediction"]])
+
+        axis.imshow(image, interpolation="nearest")
+        axis.text(
+            0.03,
+            0.97,
+            f"Ground truth\n{true_name}",
+            transform=axis.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9.4,
+            color=INK,
+            bbox={
+                "boxstyle": "round,pad=0.3",
+                "fc": "#fffdf8",
+                "ec": "#d6d3d1",
+                "alpha": 0.96,
+            },
+        )
+        axis.text(
+            0.0,
+            -0.14,
+            f"Before: {baseline_name} ({sample['baseline_confidence'] * 100:.1f}%)",
+            transform=axis.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9.2,
+            color="#b45309",
+        )
+        axis.text(
+            0.0,
+            -0.26,
+            f"After:  {finetuned_name} ({sample['finetuned_confidence'] * 100:.1f}%)",
+            transform=axis.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9.2,
+            color="#0f766e",
+        )
+
+    for axis in axes.flat[len(selected_examples):]:
+        axis.axis("off")
+
+    fig.suptitle(
+        f"Before vs. After Supervised Adaptation on Real EuroSAT Test Images ({model_name})",
+        fontsize=16,
+        color=INK,
+        y=0.98,
+    )
+    fig.text(
+        0.5,
+        0.03,
+        "Representative held-out samples where the fresh EuroSAT head is wrong and the fine-tuned model recovers the correct land-use class.",
+        ha="center",
+        va="bottom",
+        color=SUBTLE,
+        fontsize=10,
+    )
+    fig.tight_layout(rect=(0, 0.06, 1, 0.95), h_pad=2.6, w_pad=1.2)
+    fig.savefig(output_path, dpi=260, bbox_inches="tight")
+    plt.close(fig)
+    return True
+
+
 def summarize_records(records: List[Dict], finetune_summary: Dict | None = None) -> Dict:
     if not records:
         return {}
@@ -450,6 +775,28 @@ def build_deployment_site_payload(deployment_summary: Dict | None) -> dict:
     }
 
 
+def build_qualitative_site_payload(qualitative_payload: Dict | None) -> dict:
+    if not qualitative_payload:
+        return {"available": False}
+
+    example_classes = [
+        prettify_class_name(qualitative_payload["class_names"][sample["label"]])
+        for sample in qualitative_payload.get("selected_examples", [])
+    ]
+    model_name = qualitative_payload.get("model_name", "Fine-tuned model")
+    return {
+        "available": True,
+        "model_name": model_name,
+        "sample_count": len(qualitative_payload.get("selected_examples", [])),
+        "example_classes": example_classes,
+        "summary": (
+            f"Real held-out EuroSAT test imagery. The dataset panel shows one test tile per class, "
+            f"and the before/after panel uses {model_name} to show how supervised adaptation corrects "
+            "the fresh 10-class head on representative aerial samples."
+        ),
+    }
+
+
 def select_deployment_candidate(baseline_records: List[Dict], finetune_summary: Dict | None) -> dict | None:
     if not finetune_summary:
         return None
@@ -486,6 +833,7 @@ def write_site_data(
     figure_paths: dict,
     finetune_summary: Dict | None,
     deployment_summary: Dict | None,
+    qualitative_payload: Dict | None,
 ) -> None:
     summary = summarize_records(baseline_records, finetune_summary=finetune_summary)
     meta = extract_meta(baseline_payload)
@@ -508,9 +856,20 @@ def write_site_data(
                 if figure_paths.get("finetune_accuracy_delta")
                 else None
             ),
+            "dataset_mosaic": (
+                f"assets/figures/{figure_paths['dataset_mosaic'].name}"
+                if figure_paths.get("dataset_mosaic")
+                else None
+            ),
+            "qualitative_before_after": (
+                f"assets/figures/{figure_paths['qualitative_before_after'].name}"
+                if figure_paths.get("qualitative_before_after")
+                else None
+            ),
         },
         "finetune": build_finetune_site_payload(finetune_summary),
         "deployment": build_deployment_site_payload(deployment_summary),
+        "qualitative": build_qualitative_site_payload(qualitative_payload),
         "links": links,
     }
     if deployment_candidate:
@@ -549,6 +908,8 @@ def main() -> None:
         "parameter_footprint": FIGURES_DIR / "parameter_footprint.png",
         "latency_breakdown": FIGURES_DIR / "cpu_gpu_latency_breakdown.png",
         "finetune_accuracy_delta": FIGURES_DIR / "baseline_vs_finetuned_accuracy.png",
+        "dataset_mosaic": FIGURES_DIR / "eurosat_testset_mosaic.png",
+        "qualitative_before_after": FIGURES_DIR / "qualitative_before_after.png",
     }
     stale_radar = FIGURES_DIR / "tradeoff_radar.png"
 
@@ -582,12 +943,42 @@ def main() -> None:
     else:
         figure_paths["finetune_accuracy_delta"] = None
 
+    qualitative_payload = build_qualitative_examples(
+        benchmark_payload,
+        finetune_summary,
+        deployment_summary,
+        data_dir="./data",
+    )
+
+    print("  [5]  EuroSAT class mosaic ...                 ", end="", flush=True)
+    if qualitative_payload and plot_dataset_mosaic(qualitative_payload, figure_paths["dataset_mosaic"]):
+        generated_figures.append(figure_paths["dataset_mosaic"])
+        print(f"OK  {figure_paths['dataset_mosaic']}")
+    else:
+        figure_paths["dataset_mosaic"] = None
+        print("SKIPPED")
+
+    print("  [6]  Qualitative before/after panel ...      ", end="", flush=True)
+    if qualitative_payload and plot_qualitative_before_after(qualitative_payload, figure_paths["qualitative_before_after"]):
+        generated_figures.append(figure_paths["qualitative_before_after"])
+        print(f"OK  {figure_paths['qualitative_before_after']}")
+    else:
+        figure_paths["qualitative_before_after"] = None
+        print("SKIPPED")
+
     if stale_radar.exists():
         stale_radar.unlink()
         print("  [x]  Removed stale radar chart from previous output.")
 
     copy_generated_assets(generated_figures)
-    write_site_data(benchmark_payload, records, figure_paths, finetune_summary, deployment_summary)
+    write_site_data(
+        benchmark_payload,
+        records,
+        figure_paths,
+        finetune_summary,
+        deployment_summary,
+        qualitative_payload,
+    )
 
     print()
     print("  ------------------------------------------------")

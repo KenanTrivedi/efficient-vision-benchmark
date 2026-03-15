@@ -99,6 +99,14 @@ The export script also includes a TensorRT handoff path for machines where local
 
 ![Fine-Tuned Accuracy Lift](results/figures/baseline_vs_finetuned_accuracy.png)
 
+### Real EuroSAT Test Tiles
+
+![EuroSAT Test Mosaic](results/figures/eurosat_testset_mosaic.png)
+
+### Qualitative Before vs. After Adaptation
+
+![Qualitative Before and After](results/figures/qualitative_before_after.png)
+
 ## Project Page
 
 The repository includes a static project page in `docs/` and a PDF export with visible hyperlinks.

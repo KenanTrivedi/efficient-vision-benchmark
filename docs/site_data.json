@@ -236,7 +236,9 @@
     "accuracy_vs_latency": "assets/figures/accuracy_vs_latency.png",
     "parameter_footprint": "assets/figures/parameter_footprint.png",
     "latency_breakdown": "assets/figures/cpu_gpu_latency_breakdown.png",
-    "finetune_accuracy_delta": "assets/figures/baseline_vs_finetuned_accuracy.png"
+    "finetune_accuracy_delta": "assets/figures/baseline_vs_finetuned_accuracy.png",
+    "dataset_mosaic": "assets/figures/eurosat_testset_mosaic.png",
+    "qualitative_before_after": "assets/figures/qualitative_before_after.png"
   },
   "finetune": {
     "available": true,
@@ -353,6 +355,20 @@
       "onnxruntime_available": true,
       "trtexec_available": false
     }
+  },
+  "qualitative": {
+    "available": true,
+    "model_name": "MobileNetV3-Large",
+    "sample_count": 6,
+    "example_classes": [
+      "Annual Crop",
+      "Highway",
+      "Industrial",
+      "Residential",
+      "River",
+      "Sea Lake"
+    ],
+    "summary": "Real held-out EuroSAT test imagery. The dataset panel shows one test tile per class, and the before/after panel uses MobileNetV3-Large to show how supervised adaptation corrects the fresh 10-class head on representative aerial samples."
   },
   "links": {
     "repo_url": "https://github.com/KenanTrivedi/efficient-vision-benchmark",
