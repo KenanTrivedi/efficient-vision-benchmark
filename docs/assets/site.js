@@ -41,8 +41,14 @@
     }
   };
 
+  const formatSize = (value) => (value !== undefined && value !== null ? `${Number(value).toFixed(2)} MB` : null);
+  const formatDiff = (label, value) => (value !== undefined && value !== null ? `${label} ${Number(value).toFixed(6)}` : null);
+
   setText("protocol-pill", meta.protocol_label || "Benchmark run");
-  setText("device-pill", meta.device ? `Recorded on ${String(meta.device).toUpperCase()}` : "Device unavailable");
+  setText(
+    "device-pill",
+    meta.gpu_name ? `Recorded on ${meta.gpu_name}` : (meta.device ? `Recorded on ${String(meta.device).toUpperCase()}` : "Device unavailable")
+  );
   setText("model-count", summary.model_count || "-");
   setText("best-accuracy", summary.best_accuracy_model ? summary.best_accuracy_model.name : "-");
   setText(
@@ -76,13 +82,6 @@
   setImage("figure-footprint", figures.parameter_footprint);
   setImage("figure-latency", figures.latency_breakdown);
 
-  const jobHighlights = document.getElementById("job-highlights");
-  (data.job_alignment?.highlights || []).forEach((highlight) => {
-    const item = document.createElement("li");
-    item.textContent = highlight;
-    jobHighlights.appendChild(item);
-  });
-
   const modelTable = document.getElementById("model-table");
   models.forEach((model) => {
     const row = document.createElement("tr");
@@ -102,9 +101,14 @@
   (summary.recommended_finetune_targets || []).forEach((modelKey) => {
     const match = models.find((model) => model.model_key === modelKey);
     const item = document.createElement("li");
-    item.textContent = match ? `${match.name} — strong candidate for supervised adaptation.` : modelKey;
+    item.textContent = match ? `${match.name} - selected as a supervised adaptation candidate.` : modelKey;
     recommendedModels.appendChild(item);
   });
+  if (!recommendedModels.children.length) {
+    const item = document.createElement("li");
+    item.textContent = "Fine-tune targets have not been selected yet.";
+    recommendedModels.appendChild(item);
+  }
 
   const finetuneTable = document.getElementById("finetune-table");
   if (finetune.available && Array.isArray(finetune.leaderboard) && finetune.leaderboard.length > 0) {
@@ -119,7 +123,7 @@
     });
     setText(
       "finetune-summary-copy",
-      `${finetune.leaderboard.length} fine-tuned model${finetune.leaderboard.length > 1 ? "s" : ""} completed. The strongest checkpoint is ready for deployment export.`
+      `${finetune.leaderboard.length} fine-tuned model${finetune.leaderboard.length > 1 ? "s" : ""} completed. Supervised adaptation closes the transfer gap and produces a practical export candidate.`
     );
     setText(
       "export-target",
@@ -142,14 +146,18 @@
   const renderArtifactCard = (title, payload) => {
     const card = document.createElement("article");
     card.className = "artifact-card";
-    const status = payload?.status || "available";
-    const badgeClass = status === "ok" || status === "available" ? "artifact-badge" : "artifact-badge warn";
+    const normalizedStatus = String(payload?.status || "available").toLowerCase();
+    const status = normalizedStatus === "ok" ? "available" : normalizedStatus;
+    const badgeClass = status === "available" || status === "validated" ? "artifact-badge" : "artifact-badge warn";
     const descriptionBits = [];
     if (payload?.path) {
       descriptionBits.push(payload.path);
     }
+    if (payload?.num_samples !== undefined) {
+      descriptionBits.push(`${payload.num_samples} samples`);
+    }
     if (payload?.size_mb !== undefined) {
-      descriptionBits.push(`${payload.size_mb} MB`);
+      descriptionBits.push(formatSize(payload.size_mb));
     }
     if (payload?.reason) {
       descriptionBits.push(payload.reason);
@@ -157,8 +165,13 @@
     if (payload?.backend) {
       descriptionBits.push(payload.backend);
     }
-    if (payload?.max_abs_diff !== undefined) {
-      descriptionBits.push(`max abs diff ${payload.max_abs_diff}`);
+    const maxAbsDiff = formatDiff("max abs diff", payload?.max_abs_diff);
+    const meanAbsDiff = formatDiff("mean abs diff", payload?.mean_abs_diff);
+    if (maxAbsDiff) {
+      descriptionBits.push(maxAbsDiff);
+    }
+    if (meanAbsDiff) {
+      descriptionBits.push(meanAbsDiff);
     }
     card.innerHTML = `
       <span class="${badgeClass}">${status.toUpperCase()}</span>
@@ -180,25 +193,22 @@
 
   if (deployment.available) {
     const selectedModel = deployment.selected_model || {};
-    const deploymentMeta = deployment.meta || {};
+    const visibleArtifacts = [
+      ["FP32 ONNX", deployment.artifacts?.onnx_fp32],
+      ["ONNX validation", deployment.artifacts?.onnx_validation ? { status: "validated", ...deployment.artifacts.onnx_validation } : null],
+      ["Calibration data", deployment.artifacts?.calibration_data],
+      ["INT8 ONNX", deployment.artifacts?.onnx_int8],
+    ].filter(([, payload]) => payload && !["skipped", "pending", "missing"].includes(String(payload.status || "").toLowerCase()));
+
     setText(
       "deployment-copy",
-      `The export pipeline packages ${selectedModel.name || "the selected model"} into ONNX, prepares calibration data, and attempts TensorRT engine builds when local tooling is available.`
+      `The export pipeline packages ${selectedModel.name || "the selected model"} into validated FP32 and INT8 ONNX artifacts, together with reproducible calibration data for the quantization step.`
     );
     setText(
       "deployment-meta",
-      `${selectedModel.name || "Selected model"} • ONNX runtime ${deploymentMeta.onnxruntime_available ? "available" : "missing"} • TensorRT tooling ${deploymentMeta.trtexec_available ? "available" : "missing"}`
+      `${selectedModel.name || "Selected model"} • ${visibleArtifacts.length} generated deployment artifacts`
     );
-
-    const artifactOrder = [
-      ["FP32 ONNX", deployment.artifacts?.onnx_fp32],
-      ["ONNX validation", deployment.artifacts?.onnx_validation],
-      ["Calibration data", deployment.artifacts?.calibration_data],
-      ["INT8 ONNX", deployment.artifacts?.onnx_int8],
-      ["TensorRT FP16 engine", deployment.artifacts?.tensorrt_fp16],
-      ["TensorRT INT8 engine", deployment.artifacts?.tensorrt_int8],
-    ];
-    artifactOrder.forEach(([title, payload]) => {
+    visibleArtifacts.forEach(([title, payload]) => {
       artifactGrid.appendChild(renderArtifactCard(title, payload || {}));
     });
   } else {
@@ -212,17 +222,14 @@
   }
 
   setLink("repo-link", links.repo_url);
-  setLink("report-link", links.report_url);
   setLink("pdf-link", links.pdf_path);
-  setLink("pages-link", links.pages_url);
   setLink("readme-link", links.readme_url);
   setLink("deliverable-repo", links.repo_url);
-  setLink("deliverable-report", links.report_url);
   setLink("deliverable-pages", links.pages_url);
   setLink("deliverable-pdf", links.pdf_path);
   setLink("footer-repo", links.repo_url);
-  setLink("footer-report", links.report_url);
-  setLink("job-link", data.job_alignment?.role_url);
+  setLink("footer-readme", links.readme_url);
+  setLink("footer-pdf", links.pdf_path);
 
   const generatedAt = data.generated_at ? new Date(data.generated_at) : null;
   const footerBits = [

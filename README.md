@@ -1,48 +1,44 @@
 # EuroSAT Edge Vision Benchmark
 
-> Benchmark modern edge backbones on aerial imagery, fine-tune the strongest candidates, and export deployment-ready artifacts for embedded inference workflows.
+> Benchmark lightweight vision backbones on aerial imagery, fine-tune the strongest candidates on EuroSAT, and export the most practical model as deployment-ready ONNX artifacts.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.9%2Bcu128-ee4c2c.svg)](https://pytorch.org/)
 [![timm](https://img.shields.io/badge/timm-HuggingFace-yellow.svg)](https://huggingface.co/docs/timm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## What This Repository Demonstrates
+## Overview
 
-This repository is built as an **edge-AI engineering artifact**, not a toy classifier:
+This repository implements a three-stage workflow:
 
-- benchmark lightweight backbones on **EuroSAT** with latency, throughput, MACs, and footprint telemetry
-- fine-tune the most relevant models on deterministic train/val/test splits
-- compare **baseline vs. adapted** accuracy on the same held-out split
-- export the best deployment candidate to **FP32 ONNX** and **INT8 QDQ ONNX**
-- publish the results as a **GitHub Pages project page** and a **PDF packet with hyperlinks**
+1. Benchmark modern efficient backbones on EuroSAT with accuracy, latency, throughput, MACs, and footprint telemetry.
+2. Fine-tune the strongest candidates on deterministic train/validation/test splits.
+3. Export the most practical adapted model to FP32 ONNX and INT8 QDQ ONNX.
 
-That sequence maps directly to the workflow described in the live [Quantum Systems AI Software Engineer role](https://career.quantum-systems.com/o/ai-software-engineer-mfd): prepare data, train and validate models, and optimize them for constrained deployment.
+The result is an end-to-end evaluation and deployment pipeline rather than a single training script.
 
-## Important Methodology Note
+## Methodology Note
 
-`01_run_benchmark.py` is **not** a true zero-shot benchmark.
+`01_run_benchmark.py` is not a true zero-shot benchmark.
 
-It measures a **head-reset transfer baseline**:
+It measures a head-reset transfer baseline:
 
-1. load ImageNet-pretrained weights
-2. replace the classifier with a fresh EuroSAT head
-3. benchmark latency / throughput / footprint
-4. evaluate before any supervised adaptation
+1. Load ImageNet-pretrained weights.
+2. Replace the classifier with a fresh EuroSAT head.
+3. Benchmark latency, throughput, and footprint.
+4. Evaluate before supervised adaptation.
 
-That makes the baseline accuracy a **lower-bound transfer signal**, not a claim about true zero-shot overhead-image performance.
+The low baseline scores should therefore be read as a transfer lower bound, not as final model quality. The supervised adaptation stage is implemented separately in `03_finetune_models.py`.
 
-The actual adaptation stage is implemented in `03_finetune_models.py`.
+## Dataset Integrity
 
-## Dataset Integrity Fix
+The local EuroSAT cache is validated before benchmarking or training. The pipeline rejects incomplete copies and regenerates deterministic splits only against the canonical 27,000-image, 10-class RGB release.
 
-The repo now validates the local EuroSAT cache before benchmarking or training. During this pass, the previous local cache turned out to be an incomplete 9-class copy. The pipeline now refuses that state and regenerates deterministic splits only against the canonical **27,000 image / 10 class** RGB release.
-
-## Verified Results
+## Results
 
 ### Baseline benchmark snapshot
 
-The current checked-in benchmark was rerun on the corrected 10-class split with CUDA-enabled PyTorch on an **NVIDIA GeForce RTX 3060 Laptop GPU**.
+The checked-in benchmark was rerun on the corrected EuroSAT split with CUDA-enabled PyTorch on an NVIDIA GeForce RTX 3060 Laptop GPU.
 
 | Model | Top-1 (%) | CPU Latency (ms) | Params |
 |---|---:|---:|---:|
@@ -56,42 +52,34 @@ The current checked-in benchmark was rerun on the corrected 10-class split with 
 | MobileViTv2-0.5 | 7.56 | 30.39 | 1.1M |
 | EfficientNet-B0 | 5.75 | 28.02 | 4.0M |
 
-These numbers are useful for **screening deployment characteristics**, not for deciding final model quality.
+These numbers are useful for screening deployment characteristics and transfer behavior before adaptation.
 
 ### Fine-tuning results
 
-The staged transfer recipe uses:
-
-- linear-probe warmup on the classifier head
-- full fine-tuning with a lower backbone learning rate
-- AdamW, cosine decay, warmup, label smoothing, gradient clipping, AMP
+The staged fine-tuning recipe uses linear-probe warmup, full-network adaptation with a lower backbone learning rate, AdamW, cosine decay, warmup, label smoothing, gradient clipping, and AMP.
 
 Held-out EuroSAT test results:
 
-| Model | Top-1 (%) | Gain vs. baseline | Why it matters |
+| Model | Top-1 (%) | Gain vs. baseline | Interpretation |
 |---|---:|---:|---|
 | ConvNeXt-Tiny | 99.14 | +87.76 pts | highest absolute accuracy |
-| MobileNetV3-Large | 98.74 | +88.67 pts | best deployment candidate |
+| MobileNetV3-Large | 98.74 | +88.67 pts | best balance for export |
 | MobileViTv2-0.5 | 97.90 | +90.34 pts | strongest tiny-model result |
 
-This is the key technical takeaway: **supervised adaptation closes the domain gap almost completely** on the corrected EuroSAT split.
+Supervised adaptation closes the domain gap almost completely on the corrected EuroSAT split.
 
-### Deployment export result
+### Deployment export
 
-For deployment export, the best practical candidate is **MobileNetV3-Large**. It stays within 1 percentage point of the top fine-tuned score while preserving a much stronger latency profile than ConvNeXt-Tiny.
+For deployment export, the practical candidate is MobileNetV3-Large. It stays within one percentage point of the top fine-tuned score while keeping a much stronger latency and size profile than ConvNeXt-Tiny.
 
 Generated artifacts:
 
 - FP32 ONNX export: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_fp32.onnx`
 - ONNX validation against PyTorch outputs
+- Calibration dataset: `results/deployment/mobilenet_v3_large/calibration_data.npz`
 - INT8 QDQ ONNX export: `results/deployment/mobilenet_v3_large/mobilenet_v3_large_int8_qdq.onnx`
-- calibration dataset: `results/deployment/mobilenet_v3_large/calibration_data.npz`
 
-Current status:
-
-- ONNX export: complete
-- INT8 quantization: complete
-- TensorRT engine build: implemented and auto-attempted, but skipped on this machine because local `trtexec` / TensorRT tooling is not installed
+The export script also includes a TensorRT handoff path for machines where local TensorRT tooling is installed.
 
 ## Figures
 
@@ -111,22 +99,17 @@ Current status:
 
 ![Fine-Tuned Accuracy Lift](results/figures/baseline_vs_finetuned_accuracy.png)
 
-## GitHub Pages + PDF
+## Project Page
 
-The repo includes a static recruiter-facing project page in `docs/` and a GitHub Pages workflow in `.github/workflows/deploy-pages.yml`.
-
-Expected public URLs after push:
+The repository includes a static project page in `docs/` and a PDF export with visible hyperlinks.
 
 - Project page: [https://kenantrivedi.github.io/efficient-vision-benchmark/](https://kenantrivedi.github.io/efficient-vision-benchmark/)
 - Repository: [https://github.com/KenanTrivedi/efficient-vision-benchmark](https://github.com/KenanTrivedi/efficient-vision-benchmark)
+- PDF: `docs/assets/EuroSAT_Edge_Vision_Benchmark_Portfolio.pdf`
 
-The repo also generates a PDF-friendly portfolio packet with highlighted hyperlinks:
+## Workflow
 
-- `docs/assets/EuroSAT_Edge_Vision_Benchmark_Portfolio.pdf`
-
-## Repository Workflow
-
-### 1. Run the transfer baseline benchmark
+### 1. Run the baseline benchmark
 
 ```bash
 python 01_run_benchmark.py
@@ -144,7 +127,7 @@ python 03_finetune_models.py
 python 04_export_deployment_artifacts.py --model-key mobilenet_v3_large
 ```
 
-### 4. Regenerate figures and the project page
+### 4. Regenerate figures and the static site
 
 ```bash
 python 02_generate_visualizations.py
@@ -177,7 +160,6 @@ efficient-vision-benchmark/
 │   ├── models.py
 │   ├── timing.py
 │   └── training.py
-├── REPORT.md
 └── requirements.txt
 ```
 

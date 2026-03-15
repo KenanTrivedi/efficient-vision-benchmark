@@ -408,7 +408,6 @@ def infer_repo_links() -> dict:
     return {
         "repo_url": repo_url,
         "readme_url": f"{repo_url}/blob/main/README.md",
-        "report_url": f"{repo_url}/blob/main/REPORT.md",
         "pages_url": f"https://{owner.lower()}.github.io/{repo}/",
     }
 
@@ -434,10 +433,19 @@ def build_deployment_site_payload(deployment_summary: Dict | None) -> dict:
     if not deployment_summary:
         return {"available": False}
 
+    visible_artifacts = {}
+    for key, payload in (deployment_summary.get("artifacts") or {}).items():
+        if not isinstance(payload, dict):
+            continue
+        status = str(payload.get("status", "")).lower()
+        if status in {"skipped", "pending", "missing"}:
+            continue
+        visible_artifacts[key] = payload
+
     return {
         "available": True,
         "selected_model": deployment_summary.get("selected_model"),
-        "artifacts": deployment_summary.get("artifacts", {}),
+        "artifacts": visible_artifacts,
         "meta": deployment_summary.get("meta", {}),
     }
 
@@ -504,14 +512,6 @@ def write_site_data(
         "finetune": build_finetune_site_payload(finetune_summary),
         "deployment": build_deployment_site_payload(deployment_summary),
         "links": links,
-        "job_alignment": {
-            "role_url": "https://career.quantum-systems.com/o/ai-software-engineer-mfd",
-            "highlights": [
-                "Preparing and selecting data, training and validating models, and deploying them on embedded UxV platforms.",
-                "Optimization for constrained hardware, including quantization, pruning, and distillation.",
-                "Practical deployment on edge accelerators such as NVIDIA Jetson and TensorRT-backed pipelines.",
-            ],
-        },
     }
     if deployment_candidate:
         site_payload["finetune"]["deployment_candidate"] = deployment_candidate

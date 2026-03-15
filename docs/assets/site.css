@@ -230,6 +230,10 @@ table {
   color: var(--muted);
 }
 
+.body-lead {
+  margin-top: 0;
+}
+
 .mini-links a,
 .footer-links a {
   font-weight: 700;
@@ -380,6 +384,17 @@ tbody tr:hover {
   color: var(--muted);
 }
 
+.process-list {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.process-list li + li {
+  margin-top: 12px;
+}
+
 .clean-list li + li {
   margin-top: 10px;
 }
@@ -416,6 +431,7 @@ tbody tr:hover {
 .deliverable-card span:last-child {
   color: var(--muted);
   font-size: 0.94rem;
+  line-height: 1.6;
 }
 
 .artifact-badge {

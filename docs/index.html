@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EuroSAT Edge Vision Benchmark</title>
-  <meta name="description" content="Recruiter-facing project page for a EuroSAT benchmark, staged fine-tuning, and deployment export pipeline for edge vision.">
+  <meta name="description" content="Benchmark, fine-tuning, and export workflow for lightweight vision models on EuroSAT aerial imagery.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2317212b'/%3E%3Cpath d='M12 42L32 16L52 42H12Z' fill='%230f766e'/%3E%3Ccircle cx='32' cy='36' r='8' fill='%23f2ece1'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,12 +15,11 @@
   <div class="page-shell">
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Embedded Vision Portfolio Artifact</p>
-        <h1>EuroSAT Benchmark, Fine-Tuning, and Deployment Readiness</h1>
+        <p class="eyebrow">EuroSAT Model Adaptation Study</p>
+        <h1>Benchmark, fine-tune, and export lightweight vision models for aerial imagery.</h1>
         <p class="hero-text">
-          A recruiter-friendly engineering page for evaluating modern edge backbones on top-down imagery,
-          adapting the strongest candidates with transfer learning, and exporting deployment artifacts for
-          ONNX and TensorRT-style inference stacks.
+          This project benchmarks modern efficient backbones on EuroSAT, adapts the strongest models with supervised
+          transfer learning, and packages the best practical candidate as an ONNX deployment artifact.
         </p>
         <div class="hero-pills">
           <span class="pill" id="protocol-pill">Loading protocol…</span>
@@ -28,22 +27,17 @@
         </div>
         <div class="cta-row">
           <a id="repo-link" class="cta-link show-url" href="#" target="_blank" rel="noreferrer">GitHub Repository</a>
-          <a id="report-link" class="cta-link show-url secondary" href="#" target="_blank" rel="noreferrer">Technical Report</a>
-          <a id="pdf-link" class="cta-link show-url ghost" href="#" target="_blank" rel="noreferrer">PDF Portfolio</a>
+          <a id="pdf-link" class="cta-link show-url secondary" href="#" target="_blank" rel="noreferrer">Project PDF</a>
+          <a id="readme-link" class="cta-link show-url ghost" href="#" target="_blank" rel="noreferrer">README</a>
         </div>
       </div>
       <div class="hero-panel">
-        <p class="panel-kicker">Why this matters</p>
-        <p class="panel-text">
-          ImageNet intuition alone is not enough for aerial robotics. This project makes the pipeline legible:
-          benchmark the hardware trade-offs, fine-tune on the actual visual domain, and prepare the winning model
-          for edge deployment.
-        </p>
-        <div class="mini-links">
-          <a id="pages-link" class="show-url" href="#" target="_blank" rel="noreferrer">GitHub Pages</a>
-          <a id="readme-link" class="show-url" href="#" target="_blank" rel="noreferrer">README</a>
-          <a id="job-link" class="show-url" href="https://career.quantum-systems.com/o/ai-software-engineer-mfd" target="_blank" rel="noreferrer">Quantum Systems role</a>
-        </div>
+        <p class="panel-kicker">Project flow</p>
+        <ol class="process-list">
+          <li>Validate the local EuroSAT cache and benchmark the corrected 10-class split.</li>
+          <li>Fine-tune the strongest candidate models with a staged transfer recipe.</li>
+          <li>Export the best practical model as FP32 and INT8 ONNX artifacts.</li>
+        </ol>
       </div>
     </header>
 
@@ -80,29 +74,33 @@
           </p>
         </article>
         <article class="content-card accent">
-          <p class="section-kicker">Role alignment</p>
-          <h3>Why this maps cleanly to Quantum Systems</h3>
-          <ul class="clean-list" id="job-highlights"></ul>
+          <p class="section-kicker">What changed in this project</p>
+          <h3>From screening run to publishable pipeline</h3>
+          <ul class="clean-list">
+            <li>The dataset cache is checked before the run so incomplete EuroSAT copies are rejected early.</li>
+            <li>The fine-tuning stage uses a staged recipe instead of a single fixed loop.</li>
+            <li>The deployment stage shows only the artifacts that were actually generated and validated.</li>
+          </ul>
         </article>
       </section>
 
       <section class="figure-block">
         <div class="section-heading">
-          <p class="section-kicker">Baseline visuals</p>
-          <h3>Cleaner figures for README, GitHub Pages, and PDF export</h3>
+          <p class="section-kicker">Benchmark figures</p>
+          <h3>Latency, footprint, and adaptation behavior</h3>
         </div>
         <div class="figure-grid">
           <figure class="figure-card">
             <img id="figure-accuracy" alt="Accuracy versus latency plot">
-            <figcaption>Latency versus accuracy with a Pareto frontier and bubble sizes scaled by parameter count.</figcaption>
+            <figcaption>Initial screening step: accuracy versus CPU latency with a Pareto frontier and bubble sizes scaled by parameter count.</figcaption>
           </figure>
           <figure class="figure-card">
             <img id="figure-footprint" alt="Parameter footprint plot">
-            <figcaption>Log-scale footprint chart so large outliers no longer flatten the useful part of the portfolio.</figcaption>
+            <figcaption>Log-scale footprint plot to make size differences legible across small and very large backbones.</figcaption>
           </figure>
           <figure class="figure-card full-span">
             <img id="figure-latency" alt="CPU and GPU latency plot">
-            <figcaption>CPU versus GPU latency split, which is the first deployment question after model selection.</figcaption>
+            <figcaption>CPU versus GPU latency breakdown for the same baseline models.</figcaption>
           </figure>
         </div>
       </section>
@@ -137,7 +135,7 @@
         <div class="section-heading compact">
           <div>
             <p class="section-kicker">Fine-tuning outcome</p>
-            <h3>Supervised adaptation results</h3>
+            <h3>Supervised adaptation on EuroSAT</h3>
           </div>
           <p class="table-note" id="export-target">Pending export target</p>
         </div>
@@ -166,15 +164,15 @@
 
       <section class="roadmap-grid">
         <article class="content-card">
-          <p class="section-kicker">Selected next targets</p>
-          <h3>Recommended fine-tune seeds</h3>
+          <p class="section-kicker">Selected models</p>
+          <h3>Fine-tune seeds from the baseline sweep</h3>
           <ol id="recommended-models" class="clean-list numbered"></ol>
         </article>
         <article class="content-card dark">
-          <p class="section-kicker">Deployment follow-through</p>
-          <h3>What the export pipeline adds</h3>
+          <p class="section-kicker">Export decision</p>
+          <h3>How the deployment candidate was chosen</h3>
           <p id="deployment-copy">
-            After adaptation, the next useful step is deployment export: ONNX packaging, INT8 quantization, and TensorRT-ready artifact generation.
+            After adaptation, the project selects the model that stays close to the best accuracy while remaining the more practical deployment choice.
           </p>
         </article>
       </section>
@@ -182,8 +180,8 @@
       <section class="content-card" id="deployment-section">
         <div class="section-heading compact">
           <div>
-            <p class="section-kicker">Deployment artifacts</p>
-            <h3>Export status and generated files</h3>
+            <p class="section-kicker">Completed exports</p>
+            <h3>Artifacts generated from the selected model</h3>
           </div>
           <p class="table-note" id="deployment-meta">Deployment export pending</p>
         </div>
@@ -192,29 +190,24 @@
 
       <section class="content-card">
         <div class="section-heading">
-          <p class="section-kicker">Deliverables</p>
-          <h3>Portfolio links recruiters can use immediately</h3>
+          <p class="section-kicker">Project links</p>
+          <h3>Source, page, and PDF</h3>
         </div>
         <div class="deliverable-grid">
           <a id="deliverable-repo" class="deliverable-card show-url" href="#" target="_blank" rel="noreferrer">
             <span class="deliverable-label">Codebase</span>
             <strong>GitHub repository</strong>
-            <span>Source, scripts, and tracked results.</span>
-          </a>
-          <a id="deliverable-report" class="deliverable-card show-url" href="#" target="_blank" rel="noreferrer">
-            <span class="deliverable-label">Write-up</span>
-            <strong>Technical report</strong>
-            <span>Methodology, caveats, and role alignment.</span>
+            <span>Python scripts, site files, and generated summaries.</span>
           </a>
           <a id="deliverable-pages" class="deliverable-card show-url" href="#" target="_blank" rel="noreferrer">
             <span class="deliverable-label">Project page</span>
             <strong>GitHub Pages site</strong>
-            <span>Clean, printable summary with figures and links.</span>
+            <span>The published version of this page with the current figures.</span>
           </a>
           <a id="deliverable-pdf" class="deliverable-card show-url" href="#" target="_blank" rel="noreferrer">
             <span class="deliverable-label">PDF</span>
-            <strong>Recruiter-ready export</strong>
-            <span>Printable packet with highlighted hyperlinks.</span>
+            <strong>Printable summary</strong>
+            <span>A PDF export of the project page with visible hyperlinks.</span>
           </a>
         </div>
       </section>
@@ -224,8 +217,8 @@
       <p id="footer-meta">Generated benchmark site.</p>
       <p class="footer-links">
         <a id="footer-repo" class="show-url" href="#" target="_blank" rel="noreferrer">Repository</a>
-        <a id="footer-report" class="show-url" href="#" target="_blank" rel="noreferrer">Report</a>
-        <a id="footer-job" class="show-url" href="https://career.quantum-systems.com/o/ai-software-engineer-mfd" target="_blank" rel="noreferrer">Role posting</a>
+        <a id="footer-readme" class="show-url" href="#" target="_blank" rel="noreferrer">README</a>
+        <a id="footer-pdf" class="show-url" href="#" target="_blank" rel="noreferrer">PDF</a>
       </p>
     </footer>
   </div>
