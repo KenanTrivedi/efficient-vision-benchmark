@@ -506,14 +506,21 @@ tbody tr:hover {
 }
 
 @page {
-  size: A4;
-  margin: 12mm;
+  size: A4 portrait;
+  margin: 10mm;
 }
 
 @media print {
+  html,
   body {
-    background: #ffffff;
+    width: 210mm;
+  }
+
+  body {
+    background: #f6efe4;
     color: #111827;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   body::before {
@@ -535,7 +542,8 @@ tbody tr:hover {
   .deliverable-card {
     box-shadow: none;
     backdrop-filter: none;
-    background: #ffffff;
+    background: #fffaf3;
+    border-color: rgba(23, 33, 43, 0.14);
   }
 
   .cta-link,
@@ -543,13 +551,113 @@ tbody tr:hover {
     border-color: #94a3b8;
   }
 
+  .hero {
+    padding: 24px;
+    break-inside: avoid;
+  }
+
+  .summary-grid,
+  .two-up,
+  .roadmap-grid,
+  .artifact-grid,
+  .deliverable-grid,
+  .figure-grid {
+    gap: 12px;
+  }
+
+  .summary-grid {
+    margin-top: 12px;
+  }
+
+  .summary-card,
+  .content-card,
+  .table-card,
+  .figure-card,
+  .artifact-card,
+  .deliverable-card,
+  .footer {
+    break-inside: avoid;
+  }
+
+  .figure-block,
+  .table-card,
+  #finetune-section,
+  #qualitative-section,
+  #deployment-section {
+    break-before: page;
+  }
+
+  .table-card,
+  #finetune-section,
+  #qualitative-section,
+  #deployment-section,
+  .footer {
+    margin-top: 0;
+  }
+
+  .table-wrap {
+    overflow: visible;
+  }
+
+  table {
+    font-size: 0.83rem;
+    line-height: 1.45;
+  }
+
+  th,
+  td {
+    padding: 8px 6px;
+  }
+
+  .figure-card img {
+    border-radius: 14px;
+  }
+
+  .figure-card figcaption,
+  .artifact-meta,
+  .deliverable-card span:last-child,
+  .summary-note,
+  .body-lead,
+  .hero-text,
+  .process-list,
+  .clean-list {
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .hero-copy h1 {
+    font-size: 2.7rem;
+  }
+
+  .summary-card h2 {
+    font-size: 1.35rem;
+  }
+
+  .cta-row {
+    gap: 8px;
+  }
+
+  .cta-link {
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
+
+  .footer {
+    padding: 14px 18px;
+  }
+
   a.show-url::after {
     content: " [" attr(href) "]";
-    display: inline;
-    margin-left: 4px;
+    display: block;
+    margin-top: 4px;
     color: #475569;
-    font-size: 0.8em;
+    font-size: 0.75em;
     word-break: break-all;
+  }
+
+  a.show-url {
+    color: #0b57d0 !important;
+    font-weight: 700;
   }
 
   .cta-link,
